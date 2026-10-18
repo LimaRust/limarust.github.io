@@ -507,5 +507,7 @@ $('#logo-s').innerHTML=LEMON(34);
  renderSite();
  await Promise.all([loadSession(),loadLive()]);
  renderSite();
+ /* Google's consent screen links to these addresses. */
+ const doc=location.hash.slice(1);if(LEGAL[doc])legal(doc);
 })();
 </script>

@@ -76,6 +76,11 @@ const EN={
 'Каждую пятницу в 19:00 по Европе (Берлин). Если на этой неделе первый четверг месяца, вайп проходит в этот четверг. Точные даты в разделе «Вайпы».':'Every Friday at 19:00 Europe (Berlin) time. If this week has the first Thursday of the month, the wipe happens that Thursday. Exact dates are in the “Wipes” section.',
 'После вайпа у некоторых китов есть задержка.':'Some kits have a delay after the wipe.',
 'Нет. Возврат запрещён. Иначе можно было бы взять кит и сразу вернуть деньги, а это нечестно по отношению к остальным игрокам.':'No. Refunds are not possible, otherwise someone could take a kit and immediately get the money back, which is unfair to other players.',
+'Скопируй адрес и вставь в консоль игры (F1):':'Copy the address and paste it into the game console (F1):',
+'Или нажми «Играть сейчас», если установлен Steam.':'Or press “Play now” if Steam is installed.',
+'Открой меню сервера, раздел «Киты», или введи /kit. После вайпа у некоторых китов есть задержка.':'Open the server menu, “Kits” section, or type /kit. Some kits have a delay after the wipe.',
+'Нажми «Войти», подтверди аккаунт через Steam или Google, и откроется личный кабинет: ранг, киты, привилегия и расписание.':'Press “Sign in”, confirm your account with Steam or Google and your account opens: rank, kits, privilege and schedule.',
+'Анонсы вайпов и акций прямо в Telegram.':'Wipe and sale announcements right in Telegram.','Пусто':'Nothing',
 /* community and footer */
 'Новости вайпов, промокоды, поддержка и поиск команды.':'Wipe news, promo codes, support and team search.','Скопировать ссылку':'Copy link',
 'Группа Steam':'Steam group','для игроков, которым нужен честный вайп и добрая атмосфера.':'for players who want a fair wipe and a friendly atmosphere.',
@@ -98,6 +103,9 @@ const EN={
 'Не удалось войти через Steam':'Could not sign in with Steam','Сервер сайта ещё не подключён, вход временно недоступен.':'The site server is not connected yet, sign-in is temporarily unavailable.',
 'Пароли мы не запрашиваем и не храним: вход подтверждают':'We never ask for or store passwords: sign-in is confirmed by',
 'Вход через Google скоро будет доступен.':'Google sign-in will be available soon.','Google недоступен. Попробуй':'Google is unavailable. Try',
+'Ранг по времени':'Playtime rank',
+'Войди через Steam: кабинет покажет твой ранг, часы, киты и привилегию с сервера. Если Steam не подходит, можно войти через аккаунт Google.':'Sign in with Steam: your account shows your rank, hours, kits and privilege from the server. If Steam does not suit you, you can sign in with a Google account.',
+'Пароли мы не запрашиваем и не храним: вход подтверждают Steam и Google.':'We never ask for or store passwords: sign-in is confirmed by Steam and Google.',
 /* misc */
 'Нужна помощь':'Need help','Новая карта':'New map','Игрок':'Player'
 };

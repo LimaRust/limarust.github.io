@@ -69,7 +69,17 @@ section{padding-block:64px}
 /* why */
 .why{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .why .card{padding:22px}.why h3{font-size:19px;margin:12px 0 6px}.why p{margin:0;color:var(--mute)}
-.why svg{width:56px;height:auto}
+.why .wic{height:112px;border-radius:12px;background:radial-gradient(circle at 50% 40%,#30351f,#1b1e15);display:flex;align-items:center;justify-content:center}
+.why .wic svg{width:84px;height:auto}
+.rlw{position:relative;height:112px;overflow:hidden;border-radius:12px;background:#10120c;border:1px solid var(--line)}
+.rlt{display:flex;gap:8px;position:absolute;left:0;top:0;padding:10px 0;animation:rlmove 28s linear infinite}
+.rlw:hover .rlt{animation-play-state:paused}
+@keyframes rlmove{to{transform:translateX(-50%)}}
+.rcc{width:96px;height:92px;flex:none;border-radius:10px;background:var(--panel2);border:1px solid var(--line);border-bottom:4px solid var(--c,var(--mute));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11px;text-align:center;padding:4px;color:var(--mute)}
+.rcc svg{width:44px;height:auto}
+.rlm{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1px;background:var(--orange);box-shadow:0 0 14px var(--orange);z-index:2}
+.rlw::before,.rlw::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:1;pointer-events:none}
+.rlw::before{left:0;background:linear-gradient(90deg,#10120c,transparent)}.rlw::after{right:0;background:linear-gradient(270deg,#10120c,transparent)}
 /* ranks */
 .ranks{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
 .rank{padding:18px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -279,7 +289,24 @@ const LEMON=w=>`<svg viewBox="44 18 392 444" width="${w}" height="${Math.round(w
 const px=(rows,c)=>{let s='';rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch!=='.')s+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c[ch]}"/>`}));return `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" aria-hidden="true">${s}</svg>`};
 const PC={a:'#8d9577',b:'#5c634a',c:'#F29A3C',d:'#D4E85A',e:'#6DBE3A',f:'#F6DE3C',g:'#D2561F',h:'#3b3f2f'};
 const WI={gun:['................','..hhhhhhhhhh....','.hbbbbbbbbbahhhh','hxxbbbbbbbbaaaaa','hhhhhhhhhhhh....','.hbb..hb........'],lem:['...ee...','..feef..','.ffffff.','ffffffff','ffffffff','.ffffff.','..ffff..'],boom:['....g...','...ccg..','..hhhhh.','.hbbbbbh','.hbgbbbh','.hbbbbbh','..hhhhh.'],map:['hhhhhhhh','hbeeabbh','hbeeeabh','hbbeeeeh','hbbbbeeh','hhhhhhhh']};
-const PCX={...PC,x:'#7d5a35'};const WIC=k=>px(WI[k],PCX);
+const PCX={...PC,x:'#7d5a35',n:'#e8eadb',r:'#D2561F',z:'#6B7455'};
+/* Pixel icons in the style of the in-game menu. Rows are padded so every icon is a clean rectangle. */
+const padRows=rows=>{const w=Math.max(...rows.map(r=>r.length));return rows.map(r=>r.padEnd(w,'.'))};
+Object.assign(WI,Object.fromEntries(Object.entries({
+ gun:['................','..hhhhhhhhhh....','.hbbbbbbbbbahhhh','hxxbbbbbbbbaaaaa','hxxxhhhhhhhh....','.xxx..hb........','.....hbb........','.....hb.........'],
+ sulfur:['..hhh...','.hfffh..','hfffffh.','hfffffff','.hfffh..'],
+ rocket:['....gg....','...gccg...','..hbbbbh..','..hbaabh..','..hbbbbh..','..hbaabh..','..hbbbbh..','.hbh..hbh.'],
+ ammo:['.c..c..c.','cdc.cdc.cdc','cdc.cdc.cdc','hhh.hhh.hhh','hhh.hhh.hhh'],
+ helm:['..hhhhhh..','.hbbbbbbh.','hbaaaaabbh','hbaaaaabbh','hbbbbbbbbh','hbh....hbh'],
+ cloth:['hh....hh','hbh..hbh','hbbhhbbh','.hbbbbh.','.hbbbbh.','.hbbbbh.'],
+ bandage:['.hhhhhh.','hnnnnnnh','hnrrrrnh','hnnnnnnh','.hhhhhh.'],
+ metal:['..hhhh..','.hbbbbh.','hbcbbcbh','hbbbcbbh','.hbbbbh.','..hhhh..'],
+ none:['z....z','.z..z.','..zz..','..zz..','.z..z.','z....z']
+}).map(([k,r])=>[k,padRows(r)])));
+const WIC=k=>px(WI[k],PCX);
+/* Looping prize strip, like the daily roulette in the game menu. Colour = rarity. */
+const ROULETTE=[['none','Пусто','var(--dim)'],['bandage','Бинты x10','var(--green)'],['ammo','Патроны x64','var(--green)'],['metal','Ресурсы','var(--green)'],['helm','Шлем','var(--lime)'],['cloth','Бронежилет','var(--lime)'],['lem','Кит Лайм','var(--orange)'],['gun','АК-47','var(--orange)'],['rocket','Ракета','var(--orange)']];
+const rouletteStrip=()=>{const cards=ROULETTE.map(([i,n,c])=>`<div class="rcc" style="--c:${c}">${WIC(i)}<span>${n}</span></div>`).join('');return `<div class="rlw" aria-label="Призы рулетки"><div class="rlt">${cards}${cards}</div><i class="rlm"></i></div>`};
 const SVG={dc:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6.500l-4 3.500V17H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><circle cx="9" cy="10.500" r="1.500" fill="#181A14"/><circle cx="15" cy="10.500" r="1.500" fill="#181A14"/></svg>',
  tg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21.500 3.500 2.800 10.700c-.9.400-.9 1 0 1.300l4.700 1.500 1.800 5.600c.2.600.4.800.9.800.4 0 .6-.2.900-.5l2.200-2.100 4.600 3.400c.8.500 1.500.2 1.700-.8l3-14.300c.3-1.200-.4-1.800-1.300-1.600zM18 7.200l-8.400 7.600-.3 3.400-1.400-4.600L18 7.200z"/></svg>',
  st:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="15" cy="9" r="5"/><circle cx="15" cy="9" r="1.800" fill="currentColor"/><path d="M10.500 12.500 3 15.500m0 0 4 1.500m-4-1.500 1.500 4M9 21a3.500 3.500 0 1 0-1.800-6.500"/></svg>',
@@ -293,7 +320,7 @@ const DEFAULT=()=>({
  wipe:{freq:'weekly',hour:19,thu:true},
  curMap:{name:'Лимонный остров',seed:777,size:3500},
  maps:[{name:'Солнечный берег',seed:2026,size:3500,votes:41},{name:'Кислые холмы',seed:4242,size:3800,votes:27},{name:'Цитрусовый архипелаг',seed:9001,size:3000,votes:18}],
- why:[['gun','Честный вайп','Вайп по расписанию, без сюрпризов. Карта выбирается голосованием.'],['lem','Свои киты и ранги','Киты после вайпа и ранги за время дают реальные награды.'],['boom','Рулетка раз в день','Крути рулетку в меню и забирай предметы в инвентарь.']].map(([i,t,d])=>({i,t,d})),
+ why:[['sulfur','Честный вайп','Вайп по расписанию, без сюрпризов. Карта выбирается голосованием.'],['gun','Свои киты и ранги','Киты после вайпа и ранги за время дают реальные награды.'],['roulette','Рулетка раз в день','Крути рулетку в меню и забирай предметы в инвентарь.']].map(([i,t,d])=>({i,t,d})),
  ranks:[['Росток',0,'Кит Старт'],['Лимонад',10,'Скидка 5% в магазине'],['Лайм',40,'Кит Лайм раз в сутки'],['Лимон',100,'Свой цвет ника в чате'],['Цитрон',200,'Кит Цитрон и скидка 10%'],['Золотой лимон',400,'Особый тег и кит Босс']].map(([n,h,r])=>({n,h,r})),
  kits:[['Старт','free','Каменный топор, Бинты x3, Еда x5',3600,0],['Гость','free','Пистолет, Патроны x32, Аптечка',86400,0],['Ресурсы','free','Дерево x1000, Камень x500, Металл x200',7200,0],['Строитель','free','Молоток, Металл x2000, Дверь',14400,3600],['Боец','free','Томпсон, Патроны x64, Шлем',28800,7200],['Лайм','prem','АК-47, Патроны x128, Бронежилет',86400,0],['VIP','prem','LR-300, Патроны x256, Полная броня',86400,0],['Босс','prem','Болтовка, Патроны x128, C4 x2',86400,0]].map(([n,type,items,use,wipe])=>({n,type,items,use,wipe,on:true})),
  rules:[
@@ -310,8 +337,9 @@ const DEFAULT=()=>({
  donate:[['Лайм',2,'',['Кит Лайм раз в сутки','Цвет ника','Лаймы x2 на вайп']],['Лайм+',4,'',['Всё из Лайма','Кит Лайм+','Приоритет в очереди']],['VIP',8,'ХИТ',['Всё из Лайма+','Кит VIP','Свой тег в чате','Скидка 15% в магазине']],['Босс',15,'',['Всё из VIP','Кит Босс','Особый тег']]].map(([n,price,tag,perks])=>({n,price,tag,perks:perks.join(', '),dev:false}))
 });
 let C=DEFAULT();
-try{const s=localStorage.getItem('lima_site3');if(s)C=Object.assign(DEFAULT(),JSON.parse(s))}catch(e){}
-const save=()=>{try{localStorage.setItem('lima_site3',JSON.stringify(C))}catch(e){}pushSettings()};
+/* lima_site4: older saved copies (site3) held the previous icon ids, so they are intentionally not reused. */
+try{const s=localStorage.getItem('lima_site4');if(s)C=Object.assign(DEFAULT(),JSON.parse(s))}catch(e){}
+const save=()=>{try{localStorage.setItem('lima_site4',JSON.stringify(C))}catch(e){}pushSettings()};
 /* ===== API (Cloudflare Worker) ===== */
 /* After deploying the Worker, put its address here, e.g. 'https://lima-rust-api.yourname.workers.dev'. */
 const API_URL='https://lima-rust-api.lima-backend.workers.dev';
@@ -365,11 +393,11 @@ cabinet(){if(!ACC)return '';const ri=rankOf(ACC.hours),r=C.ranks[ri],nx=C.ranks[
  <dl class="pd"><div><dt>Игрок</dt><dd>${esc(ACC.nick)}</dd></div><div><dt>Steam ID</dt><dd>${esc(ACC.steamId)} <button class="btn sm" data-cp="${esc(ACC.steamId)}" style="padding:4px 10px;font-size:12px">Копировать</button></dd></div><div><dt>Привилегия</dt><dd>${hasP?esc(ACC.priv)+' <span class="ok" style="font-size:13px">активна</span>':adm?'Администратор':'Нет'}</dd></div><div><dt>Часов на сервере</dt><dd>${ACC.hours}</dd></div><div><dt>Регистрация</dt><dd>${new Date(ACC.since).toLocaleDateString('ru-RU')}</dd></div></dl></div>
  <div class="card"><h3>Ранг по времени</h3><div style="font:700 32px var(--f-px);color:var(--lime)">${esc(r.n)}</div><div class="mut">Награда: ${esc(r.r)}</div><div class="bar" style="height:18px"><i style="width:${pct}%"></i></div><div class="mut" style="display:flex;justify-content:space-between;font-size:14px"><span>${ACC.hours} ч</span><span>${nx?`до «${esc(nx.n)}»: ${nx.h} ч`:'максимальный ранг'}</span></div></div>
  <div class="card"><h3>Мои киты</h3><div style="display:grid;gap:8px">${kits}</div></div>
- <div class="card"><h3>Связанные аккаунты</h3><div class="kr"><span>Steam</span>${ACC.steamId?'<b class="ok">Привязан</b>':'<button class="btn sm pri" data-linksteam>Привязать Steam</button>'}</div><div class="kr"><span>Google${ACC.email?' · '+esc(ACC.email):''}</span>${ACC.email?'<b class="ok">Привязан</b>':'<span id="gbtn2" class="gwrap"></span>'}</div><div class="mut" style="font-size:14px">${ACC.steamId&&ACC.email?'Можно входить любым способом, кабинет будет один.':'Привяжи второй способ входа: тогда кабинет, ранг и права будут одинаковыми при входе через Steam и через Google.'}</div>${ACC.email?`<h3 style="margin-top:6px">Уведомления на почту</h3>${[['map','Голосование за карту'],['wipe','Новый вайп'],['news','Новости сервера']].map(([k,n])=>`<label class="er" style="gap:10px"><input type="checkbox" data-topic="${k}" ${(ACC.topics||[]).includes(k)?'checked':''}>${n}</label>`).join('')}<div class="mut" style="font-size:13px">Подписки сохраняются сразу. Рассылка включится, когда подключим почтовый сервис.</div>`:''}</div>
- <div class="card"><h3>Ближайший вайп</h3>${w?`<div style="font:700 30px var(--f-px);color:var(--orange)" ${C.wipe.dev?'>В разработке':`data-end="${w.ts}" data-fmt="d">—`}</div><div class="mut">${WDF[w.wd]}, ${w.d} ${MN[w.m]}, ${C.wipe.hour}:00 по Берлину</div>`:''}<h3 style="margin-top:6px">Голос за карту</h3><div class="mut">${mv?`Твой голос: <b style="color:var(--lime)">${esc(mv)}</b>`:'Ты ещё не голосовал.'}</div><a class="btn sm" href="#map" style="align-self:flex-start">К голосованию</a></div>
+ <div class="card"><h3>Связанные аккаунты</h3><div class="kr"><span>Steam</span>${ACC.steamId?'<b class="ok">Привязан</b>':'<button class="btn sm pri" data-linksteam>Привязать Steam</button>'}</div>${ACC.email?`<div class="kr"><span>Google · ${esc(ACC.email)}</span><b class="ok">Привязан</b></div>`:'<div class="kr" style="flex-direction:column;align-items:stretch;gap:10px"><span>Google</span><span id="gbtn2" class="gwrap"></span></div>'}<div class="mut" style="font-size:14px">${ACC.steamId&&ACC.email?'Можно входить любым способом, кабинет будет один.':'Привяжи второй способ входа: тогда кабинет, ранг и права будут одинаковыми при входе через Steam и через Google.'}</div>${ACC.email?`<h3 style="margin-top:6px">Уведомления на почту</h3>${[['map','Голосование за карту'],['wipe','Новый вайп'],['news','Новости сервера']].map(([k,n])=>`<label class="er" style="gap:10px"><input type="checkbox" data-topic="${k}" ${(ACC.topics||[]).includes(k)?'checked':''}>${n}</label>`).join('')}<div class="mut" style="font-size:13px">Подписки сохраняются сразу. Рассылка включится, когда подключим почтовый сервис.</div>`:''}<button class="btn sm" data-logout style="align-self:flex-start;margin-top:auto">Выйти из аккаунта</button></div>
+ <div class="card" style="grid-column:1/-1;justify-self:center;width:min(100%,460px);text-align:center;align-items:center"><h3>Ближайший вайп</h3>${w?`<div style="font:700 30px var(--f-px);color:var(--orange)" ${C.wipe.dev?'>В разработке':`data-end="${w.ts}" data-fmt="d">—`}</div><div class="mut">${WDF[w.wd]}, ${w.d} ${MN[w.m]}, ${C.wipe.hour}:00 по Берлину</div>`:''}<h3 style="margin-top:6px">Голос за карту</h3><div class="mut">${mv?`Твой голос: <b style="color:var(--lime)">${esc(mv)}</b>`:'Ты ещё не голосовал.'}</div><a class="btn sm" href="#map">К голосованию</a></div>
  ${adm?`<div class="card" style="border-color:var(--orange);grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between"><div style="display:grid;gap:8px;max-width:640px"><h3>Редактор сайта</h3><div class="mut">Ты вошёл как администратор. Можно менять разделы, вайп, карты, ранги, киты, правила, донат и доступ.</div></div><button class="btn org" data-drawer>Открыть редактор</button></div>`:''}
  </div><div class="cabfoot"><button class="btn" data-logout>Выйти из аккаунта</button></div></div></section>`},
-why(){return `<section id="why"><div class="wrap">${ttl('Зачем играть у нас')}<div class="grid why">${C.why.map(w=>`<div class="card">${WIC(w.i)||''}<h3>${esc(w.t)}</h3><p>${esc(w.d)}</p></div>`).join('')}</div></div></section>`},
+why(){return `<section id="why"><div class="wrap">${ttl('Зачем играть у нас')}<div class="grid why">${C.why.map(w=>`<div class="card">${w.i==='roulette'?rouletteStrip():`<div class="wic">${WI[w.i]?WIC(w.i):''}</div>`}<h3>${esc(w.t)}</h3><p>${esc(w.d)}</p></div>`).join('')}</div></div></section>`},
 ranks(){return `<section id="ranks"><div class="wrap">${ttl('Ранги по времени')}<p class="note" style="margin:-14px 0 24px">Играй на сервере и получай награды. Ранг растёт сам, ничего покупать не нужно.</p><div class="grid ranks">${C.ranks.map((r,i)=>`<div class="card rank">${LEMON(56)}<h3>${esc(r.n)}</h3><span class="hrs">${i?'от '+r.h+' ч':'старт'}</span><p>${esc(r.r)}</p></div>`).join('')}</div></div></section>`},
 map(){const vt=C.maps.reduce((a,m)=>a+(+m.votes||0),0)||1;const mine=ACC&&MYVOTE&&MYVOTE.nick===ACC.nick?MYVOTE.i:-1;
  return `<section id="map"><div class="wrap">${ttl('Карта вайпа')}<div class="mapg"><div class="card mapc"><span class="badge lime">Текущий вайп</span>${C.curMap.img?`<img class="mimg" data-zoom src="${esc(C.curMap.img)}" alt="${esc(C.curMap.name)}">`:'<canvas id="cm" data-zoom></canvas>'}<h3 style="font:700 22px var(--f-px)">${esc(C.curMap.name)}</h3><span class="mut">Seed ${esc(C.curMap.seed)} · размер ${esc(C.curMap.size)}</span></div><div style="display:grid;gap:12px;align-content:start"><div><b style="font-size:18px">Голосование за следующую карту</b><div class="mut" style="font-size:14px">${ACC?'Один голос на аккаунт. Можно изменить.':'Чтобы голосовать, войди через Steam.'}</div></div>${C.maps.map((m,i)=>`<div class="card vote ${i===mine?'mine':''}">${m.img?`<img class="mimg" data-zoom src="${esc(m.img)}" alt="${esc(m.name)}">`:`<canvas data-seed="${esc(m.seed)}" data-zoom></canvas>`}<div class="vi"><b>${esc(m.name)}</b><span class="mut" style="font-size:13px">Seed ${esc(m.seed)} · ${esc(m.size)}</span><div class="bar"><i style="width:${Math.round(m.votes/vt*100)}%"></i></div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="mut" style="font-size:13px">${m.votes} голосов · ${Math.round(m.votes/vt*100)}%</span><button class="btn sm ${i===mine?'':'pri'}" data-vote="${i}">${i===mine?'Твой голос':'Голосовать'}</button></div></div></div>`).join('')}</div></div></div></section>`},
@@ -416,7 +444,7 @@ function loginM(){
  if(on&&GOOGLE_CLIENT_ID)initGoogle();
  else if(on)$('#gbtn').innerHTML='<span class="demo">Вход через Google скоро будет доступен.</span>'}
 function initGoogle(sel='#gbtn'){
- const go=()=>{google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:onGoogle});const el=$(sel);if(el)google.accounts.id.renderButton(el,{theme:'outline',size:'large',shape:'pill',width:280,text:'signin_with',locale:'ru'})};
+ const go=()=>{google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:onGoogle});const el=$(sel);if(el)google.accounts.id.renderButton(el,{theme:'outline',size:'large',shape:'pill',width:240,text:'signin_with',locale:'ru'})};
  if(window.google&&google.accounts){go();return}
  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=go;s.onerror=()=>{$('#gbtn').innerHTML='<span class="demo">Google недоступен. Попробуй Steam.</span>'};document.head.appendChild(s)}
 async function onGoogle(resp){
@@ -444,7 +472,7 @@ document.addEventListener('change',async e=>{
  catch(err){t.checked=!t.checked;toast('Не удалось сохранить подписку')}});
 const CUR_SYM={EUR:'€',USD:'$',UAH:'₴',PLN:'zł',CZK:'Kč',GBP:'£',RUB:'₽',KZT:'₸',TRY:'₺'};
 const priceOf=d=>{const p=LIVE.pricing;return p&&p.prices&&p.prices[d.n]!=null?`${p.prices[d.n]} ${CUR_SYM[p.currency]||p.currency}`:`${d.price} €`};
-let saveT;const pushSettings=()=>{if(!apiOn()||!isAdmin())return;clearTimeout(saveT);saveT=setTimeout(()=>{api('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(C)}).catch(()=>toast('Не удалось сохранить настройки на сервер'))},800)};
+let saveT;const pushSettings=()=>{if(!apiOn()||!isAdmin())return;clearTimeout(saveT);saveT=setTimeout(()=>{api('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(C)}).then(()=>toast('Настройки сохранены')).catch(()=>toast('Не удалось сохранить настройки на сервер'))},800)};
 /* ===== топ, таймеры, частицы ===== */
 function renderTop(q=''){const tb=$('#tb');if(!tb)return;tb.innerHTML=TOP.map((p,i)=>[p,i]).filter(([p])=>p[0].toLowerCase().includes(q.toLowerCase())).map(([p,i])=>`<tr><td class="pos">${i+1}</td><td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td><span class="rk">${esc(C.ranks[rankOf(p[2])].n)}</span></td></tr>`).join('')||'<tr><td colspan="5" class="mut">Игрок не найден.</td></tr>'}
 function tick(){const w=nextWipes(1)[0];const cd=$('#cd');if(cd&&w){const s=Math.max(0,(w.ts-Date.now())/1000|0);cd.innerHTML=[[s/86400|0,'ДНИ'],[s%86400/3600|0,'ЧАСЫ'],[s%3600/60|0,'МИН'],[s%60,'СЕК']].map(([v,l])=>`<div><b>${String(v).padStart(2,'0')}</b><span>${l}</span></div>`).join('')}

@@ -62,7 +62,9 @@ section{padding-block:64px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;animation:p 1.8s infinite}
 @keyframes p{50%{opacity:.35}}
 /* promo band */
-.band{background:linear-gradient(90deg,var(--lime),var(--orange));color:var(--lime-d)}
+.band{background:linear-gradient(90deg,var(--lime),var(--orange),var(--lime));background-size:200% 100%;animation:shim 8s ease-in-out infinite alternate;color:var(--lime-d)}
+@keyframes shim{from{background-position:0 0}to{background-position:100% 100%}}
+@media (prefers-reduced-motion:reduce){.band,.next{animation:none}}
 .band .wrap{display:flex;gap:16px;align-items:center;padding-block:12px;flex-wrap:wrap;justify-content:center}
 .band b{font:700 20px var(--f-px)}.band span{font-weight:600}
 .band .btn{background:var(--lime-d);color:var(--lime);padding:8px 16px}
@@ -114,7 +116,7 @@ section{padding-block:64px}
 .kit .cd{margin-top:auto;font-size:13px;border-top:1px dashed var(--line);padding-top:10px}
 /* wipe */
 .two{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.next{padding:28px;text-align:center;background:linear-gradient(135deg,var(--lime),var(--orange));color:var(--lime-d);border:0}
+.next{padding:28px;text-align:center;background:linear-gradient(135deg,var(--lime),var(--orange),var(--lime));background-size:200% 200%;animation:shim 8s ease-in-out infinite alternate;color:var(--lime-d);border:0}
 .next b.px{font-size:30px;display:block}
 .cd4{display:flex;gap:10px;justify-content:center;margin:16px 0}
 .cd4 div{background:rgba(0,0,0,.22);border-radius:10px;padding:10px 14px;min-width:70px}

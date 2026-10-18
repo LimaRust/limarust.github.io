@@ -358,7 +358,7 @@ cabinet(){if(!ACC)return '';const ri=rankOf(ACC.hours),r=C.ranks[ri],nx=C.ranks[
  const kits=C.kits.filter(k=>k.on).map((k,i)=>{const end=((ACC.kits||{})[k.n]||0)*1000,wl=Math.max(0,(+k.wipe||0)-sw),left=(end-Date.now())/1000;let st;if(k.type==='prem'&&!hasP)st='<b class="mut">Нужна привилегия</b>';else if(wl>0)st=`<b class="wt">После вайпа <span data-end="${Date.now()+wl*1000}">${fmt(wl)}</span></b>`;else if(left>0)st=`<b class="wt">Через <span data-end="${end}">${fmt(left)}</span></b>`;else st='<b class="ok">Доступен</b>';return `<div class="kr"><span>${esc(k.n)}</span>${st}</div>`}).join('');
  const mv=MYVOTE&&MYVOTE.nick===ACC.nick&&C.maps[MYVOTE.i]?C.maps[MYVOTE.i].name:null;
  return `<section id="cabinet"><div class="wrap">${ttl('Мой кабинет')}<div class="cab2">
- <div class="card prof"><div class="pav">${esc(ACC.nick[0]||'L').toUpperCase()}</div><div class="pinfo"><h3>${esc(ACC.nick)}</h3><div class="pbadges">${adm?'<span class="badge org">Администратор</span>':''}${hasP&&!adm?`<span class="badge lime">${esc(ACC.priv)}</span>`:''}${!hasP&&!adm?'<span class="badge">Привилегии нет</span>':''}</div>${!hasP&&!adm?'<a class="btn org sm" href="#donate" style="align-self:flex-start">Получить привилегию</a>':''}</div>
+ <div class="card prof"><div class="pav">${ACC.avatar?`<img src="${esc(ACC.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`:esc(ACC.nick[0]||'L').toUpperCase()}</div><div class="pinfo"><h3>${esc(ACC.nick)}</h3><div class="pbadges">${adm?'<span class="badge org">Администратор</span>':''}${hasP&&!adm?`<span class="badge lime">${esc(ACC.priv)}</span>`:''}${!hasP&&!adm?'<span class="badge">Привилегии нет</span>':''}</div>${!hasP&&!adm?'<a class="btn org sm" href="#donate" style="align-self:flex-start">Получить привилегию</a>':''}</div>
  <dl class="pd"><div><dt>Игрок</dt><dd>${esc(ACC.nick)}</dd></div><div><dt>Steam ID</dt><dd>${esc(ACC.steamId)} <button class="btn sm" data-cp="${esc(ACC.steamId)}" style="padding:4px 10px;font-size:12px">Копировать</button></dd></div><div><dt>Привилегия</dt><dd>${hasP?esc(ACC.priv)+' <span class="ok" style="font-size:13px">активна</span>':adm?'Администратор':'Нет'}</dd></div><div><dt>Часов на сервере</dt><dd>${ACC.hours}</dd></div><div><dt>Регистрация</dt><dd>${new Date(ACC.since).toLocaleDateString('ru-RU')}</dd></div></dl></div>
  <div class="card"><h3>Ранг по времени</h3><div style="font:700 32px var(--f-px);color:var(--lime)">${esc(r.n)}</div><div class="mut">Награда: ${esc(r.r)}</div><div class="bar" style="height:18px"><i style="width:${pct}%"></i></div><div class="mut" style="display:flex;justify-content:space-between;font-size:14px"><span>${ACC.hours} ч</span><span>${nx?`до «${esc(nx.n)}»: ${nx.h} ч`:'максимальный ранг'}</span></div></div>
  <div class="card"><h3>Мои киты</h3><div style="display:grid;gap:8px">${kits}</div></div>
@@ -389,7 +389,7 @@ function renderSite(){
  $('#main').innerHTML=ORDER.filter(k=>k==='home'||k==='discord'||k==='cabinet'||C.show[k]).map(k=>SEC[k]()).join('');
  $('#bn').textContent=C.name;document.title=C.name+' Сайт';
  $('#tabs').innerHTML=NAV.filter(([k])=>k==='home'||(k==='cabinet'?!!ACC:C.show[k])).map(([i,n])=>`<a href="#${i}" data-n="${i}">${n}</a>`).join('');
- $('#acc').innerHTML=(ACC?`<span class="me"><i>${esc(ACC.nick[0]||'L').toUpperCase()}</i>${esc(ACC.nick)}</span>`:`<button class="btn pri sm" data-login>Войти</button>`)+(isAdmin()?`<button class="ico" data-drawer aria-label="Настройки сайта" title="Настройки сайта">${SVG.gear}</button>`:'');
+ $('#acc').innerHTML=(ACC?`<span class="me"><i>${ACC.avatar?`<img src="${esc(ACC.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`:esc(ACC.nick[0]||'L').toUpperCase()}</i>${esc(ACC.nick)}</span>`:`<button class="btn pri sm" data-login>Войти</button>`)+(isAdmin()?`<button class="ico" data-drawer aria-label="Настройки сайта" title="Настройки сайта">${SVG.gear}</button>`:'');
  footer();
  $$('canvas[data-seed]').forEach(c=>drawMap(c,c.dataset.seed));const cm=$('#cm');if(cm)drawMap(cm,C.curMap.seed);
  renderTop();particles();spy();tick();
@@ -421,7 +421,7 @@ async function onGoogle(resp){
 async function loadSession(){
  if(!tokenGet()||!apiOn()){ACC=null;return}
  try{const m=await api('/api/me');
-  ACC={provider:m.provider,role:m.role,steamId:m.steamId||'',email:m.email||'',nick:m.name||(m.steamId?'Игрок'+m.steamId.slice(-4):'Игрок'),since:(m.firstSeen||Date.now()/1000)*1000,hours:+m.hours||0,priv:m.priv||(m.role==='admin'?'Администратор':'—'),kits:m.kits||{}}}
+  ACC={provider:m.provider,role:m.role,avatar:m.avatar||'',steamId:m.steamId||'',email:m.email||'',nick:m.name||(m.steamId?'Игрок'+m.steamId.slice(-4):'Игрок'),since:(m.firstSeen||Date.now()/1000)*1000,hours:+m.hours||0,priv:m.priv||(m.role==='admin'?'Администратор':'—'),kits:m.kits||{}}}
  catch(e){if(String(e.message)==='http_401'){tokenSet('');ACC=null}}}
 async function loadLive(){
  if(!apiOn())return;

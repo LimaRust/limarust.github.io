@@ -521,8 +521,14 @@ function tick(){const w=nextWipes(1)[0];const cd=$('#cd');if(cd&&w){const s=Math
  $$('[data-end]').forEach(e=>{const l=(+e.dataset.end-Date.now())/1000;if(e.dataset.fmt==='d'){const s=Math.max(0,l|0);e.textContent=(s/86400|0)+(LANG==='en'?'d ':'д ')+(s%86400/3600|0)+(LANG==='en'?'h ':'ч ')+(s%3600/60|0)+(LANG==='en'?'m':'м')}else{if(l<=0&&!tick.r){tick.r=1;setTimeout(()=>{tick.r=0;renderSite()},50)}e.textContent=fmt(l)}})}
 setInterval(tick,1000);setInterval(()=>{const o=$('#onl');if(o&&!LIVE.status)o.textContent=120+Math.random()*16|0},4000);
 setInterval(async()=>{if(!apiOn()||document.hidden)return;await loadLive();const o=$('#onl');if(o&&LIVE.status&&LIVE.status.max)o.textContent=LIVE.status.online;renderTop($('#sq')?$('#sq').value:'')},60000);
-let PR=null;function particles(){const c=$('#cv');if(!c)return;const x=c.getContext('2d');let w=c.width=c.offsetWidth,h=c.height=c.offsetHeight;const P=Array.from({length:Math.min(60,w/20|0)},()=>({x:Math.random()*w,y:Math.random()*h,s:.2+Math.random()*.6,r:2+Math.random()*3}));const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
- (function f(){if(!c.isConnected)return;x.clearRect(0,0,w,h);P.forEach(p=>{if(!still){p.y-=p.s;p.x+=Math.sin(p.y/30)*.3;if(p.y<-5){p.y=h+5;p.x=Math.random()*w}}x.fillStyle='rgba(212,232,90,.35)';x.fillRect(p.x|0,p.y|0,p.r,p.r)});if(!still)requestAnimationFrame(f)})()}
+let PR=null;function particles(){const c=$('#cv');if(!c)return;const x=c.getContext('2d');let w=c.width=c.offsetWidth,h=c.height=c.offsetHeight;const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ /* Twinkle: every square fades in, stays and fades out in place, then reappears elsewhere. Same effect as the in-game menu. */
+ const mk=age=>({x:Math.random()*w,y:Math.random()*h,r:3+(Math.random()*3|0),life:3500+Math.random()*3500,t:age});
+ const P=Array.from({length:Math.min(40,w/30|0)},()=>{const p=mk(0);p.t=Math.random()*p.life;return p});
+ let last=performance.now();
+ (function f(now){if(!c.isConnected)return;const dt=Math.min(100,now-last);last=now;x.clearRect(0,0,w,h);
+  P.forEach((p,i)=>{if(!still)p.t+=dt;if(p.t>=p.life)p=P[i]=mk(0);const k=Math.sin(Math.PI*p.t/p.life);x.fillStyle='rgba(212,232,90,'+(.42*k*k).toFixed(3)+')';x.fillRect(p.x|0,p.y|0,p.r,p.r)});
+  if(!still)requestAnimationFrame(f)})(last)}
 function spy(){let cur='home';NAV.forEach(([i])=>{const e=document.getElementById(i);if(e&&e.getBoundingClientRect().top<140)cur=i});$$('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.n===cur))}
 addEventListener('scroll',spy,{passive:true});
 /* ===== админ-панель ===== */

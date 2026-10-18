@@ -312,7 +312,7 @@ const save=()=>{try{localStorage.setItem('lima_site3',JSON.stringify(C))}catch(e
 /* ===== API (Cloudflare Worker) ===== */
 /* After deploying the Worker, put its address here, e.g. 'https://lima-rust-api.yourname.workers.dev'. */
 const API_URL='https://lima-rust-api.lima-backend.workers.dev';
-const GOOGLE_CLIENT_ID='';
+const GOOGLE_CLIENT_ID='391639220438-90ac5fe4l64uq5hjd1ab9bvlmn3q2dqa.apps.googleusercontent.com';
 const apiOn=()=>!API_URL.includes('example');
 const tokenGet=()=>{try{return localStorage.getItem('lima_token')||''}catch(e){return ''}};
 const tokenSet=t=>{try{t?localStorage.setItem('lima_token',t):localStorage.removeItem('lima_token')}catch(e){}};

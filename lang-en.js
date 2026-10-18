@@ -1,0 +1,103 @@
+/* English texts for the site. Keys are the Russian originals; the page swaps them at render time when EN is selected.
+   Longer keys win over shorter ones, so full sentences can be listed next to single words. */
+const EN={
+/* navigation and common */
+'Главная':'Home','Кабинет':'Account','Ранги':'Ranks','Карта':'Map','Киты':'Kits','Вайпы':'Wipes','Правила':'Rules','Топ':'Top','Донат':'Donate','FAQ':'FAQ',
+'Войти':'Sign in','Выйти из аккаунта':'Sign out','Подробнее':'More','Назад':'Back','Дальше':'Next','Закрыть':'Close','Отмена':'Cancel','Понятно':'Got it','Копировать':'Copy','Скопировано':'Copied',
+'Играть сейчас':'Play now','Сообщество':'Community','Меню':'Menu','Разделы':'Sections','Документы':'Documents','Сервер':'Server','Игроку':'For players','Условия':'Terms',
+/* hero */
+'Сервер Rust с лимонным настроением: честный вайп, свои киты, ранги за время и рулетка раз в день.':'A Rust server with a lemony mood: fair wipes, custom kits, playtime ranks and a daily roulette.',
+'онлайн из':'online of','до вайпа':'until wipe','размер карты':'map size','игрока в команде':'players per team','В разработке':'In development',
+'АКЦИЯ':'SALE','Донат x2 до воскресенья: двойные лаймы на любое пополнение':'Donate x2 until Sunday: double limes on any top-up',
+/* why */
+'Зачем играть у нас':'Why play with us','Честный вайп':'Fair wipes','Свои киты и ранги':'Custom kits and ranks','Рулетка раз в день':'Daily roulette',
+'Вайп по расписанию, без сюрпризов. Карта выбирается голосованием.':'Wipes on schedule, no surprises. The map is chosen by vote.',
+'Киты после вайпа и ранги за время дают реальные награды.':'Post-wipe kits and playtime ranks give real rewards.',
+'Крути рулетку в меню и забирай предметы в инвентарь.':'Spin the roulette in the menu and take the items to your inventory.',
+/* ranks */
+'Ранги по времени':'Playtime ranks','Играй на сервере и получай награды. Ранг растёт сам, ничего покупать не нужно.':'Play on the server and earn rewards. Your rank grows on its own, nothing to buy.',
+'Росток':'Sprout','Лимонад':'Lemonade','Лайм':'Lime','Лимон':'Lemon','Цитрон':'Citron','Золотой лимон':'Golden Lemon','старт':'start',
+'Кит Старт':'Starter kit','Скидка 5% в магазине':'5% shop discount','Кит Лайм раз в сутки':'Lime kit once a day','Свой цвет ника в чате':'Your own nickname colour in chat','Кит Цитрон и скидка 10%':'Citron kit and 10% discount','Особый тег и кит Босс':'Special tag and Boss kit',
+/* map */
+'Карта вайпа':'Wipe map','Текущий вайп':'Current wipe','Карта скоро появится':'The map is coming soon','Голосование за следующую карту':'Vote for the next map',
+'Один голос на аккаунт. Можно изменить.':'One vote per account. You can change it.','Чтобы голосовать, войди через':'To vote, sign in with','Голосовать':'Vote','Твой голос':'Your vote','голосов':'votes',
+'Лимонный остров':'Lemon Island','Солнечный берег':'Sunny Shore','Кислые холмы':'Sour Hills','Цитрусовый архипелаг':'Citrus Archipelago',
+/* kits */
+'Бесплатные киты':'Free kits','Премиум киты':'Premium kits','Бесплатный':'Free','Премиум':'Premium',
+'Старт':'Starter','Гость':'Guest','Еда':'Food','Медик':'Medic','Ресурсы':'Resources','Строитель':'Builder','Оружие':'Weapons','Луки':'Bows','Инструменты':'Tools','Боец':'Fighter','Босс':'Boss',
+'Каменный топор':'Stone hatchet','Бинты':'Bandages','Яблоки':'Apples','Пистолет':'Pistol','Патроны':'Ammo','Аптечка':'Medkit','Аптечки':'Medkits','Бобы':'Beans','Рыба':'Fish','Мясо':'Meat',
+'Шприцы':'Syringes','Антирад':'Anti-rad','Дерево':'Wood','Камень':'Stone','Металл':'Metal','Сера':'Sulfur','Молоток':'Hammer','Дверь':'Door','Томпсон':'Thompson','Полуавтомат':'Semi-auto rifle','Шлем':'Helmet',
+'Лук':'Bow','Арбалет':'Crossbow','Стрелы HV':'HV arrows','Стрелы':'Arrows','Кирка':'Pickaxe','Топор':'Hatchet','Бензопила':'Chainsaw','АК-47':'AK-47','Бронежилет':'Body armor','Тяжёлая броня':'Heavy armor','Полная броня':'Full armor',
+'Болтовка':'Bolt rifle','Ракетница':'Rocket launcher','Хазмат':'Hazmat suit','Раз в':'Once every','После вайпа через':'After wipe in','сутки':'day','час':'hour','дн.':'days','мин':'min',
+'Доступен':'Available','Нужна привилегия':'Privilege required','После вайпа':'After wipe','Через':'In',
+/* wipe */
+'Расписание вайпов':'Wipe schedule','Следующий вайп':'Next wipe','Ближайший вайп':'Next wipe','Ближайший':'Next','Вайп':'Wipe','Форс-вайп':'Force wipe','по Европе (Берлин)':'Europe (Berlin) time','у тебя':'for you','по Берлину':'Berlin time','Берлин':'Berlin',
+'Напомнить в Discord':'Remind me on Discord','Каждую пятницу':'Every Friday','Раз в две недели по пятницам':'Every second Friday','Первый четверг месяца: вайп в четверг.':'First Thursday of the month: the wipe is on Thursday.',
+'Расписание вайпов появится':'The wipe schedule will appear','после':'after','года':'','позже':'later','ДНИ':'DAYS','ЧАСЫ':'HOURS','МИН':'MIN','СЕК':'SEC',
+/* rules */
+'Правила и команды':'Rules and commands','Поиск по правилам и командам':'Search rules and commands','Результаты поиска':'Search results','Ничего не найдено.':'Nothing found.','Нажми на команду, чтобы скопировать.':'Click a command to copy it.',
+'Команды':'Commands','Общие':'General','Рейды':'Raids','Строительство':'Building','Чат':'Chat','Читы и баги':'Cheats and bugs','Наказания':'Punishments',
+'Уважай игроков':'Respect other players','Оскорбления, угрозы и травля запрещены.':'Insults, threats and bullying are forbidden.',
+'Один аккаунт на человека':'One account per person','Мультиаккаунты для обхода наказаний запрещены.':'Multi-accounts to dodge punishments are forbidden.',
+'Играй честно':'Play fair','Любая помощь от сторонних программ считается читом.':'Any help from third-party programs counts as cheating.',
+'Следуй указаниям админов':'Follow admin instructions','Спорные ситуации решаются в тикете Discord.':'Disputes are solved in a Discord ticket.',
+'Не рекламируй другие серверы':'Do not advertise other servers','Ссылки и названия чужих серверов запрещены.':'Links to and names of other servers are forbidden.',
+'Лимит команды: 4 игрока':'Team limit: 4 players','Максимум 4 человека на базе и в рейдах.':'At most 4 people on a base and in raids.',
+'Союзы записываются':'Alliances are recorded','Союз можно объявить в чате команды.':'An alliance can be announced in team chat.',
+'Не предавай союзника':'Do not betray an ally','Предательство в рейде наказывается.':'Betrayal during a raid is punished.',
+'Рейдить можно всех':'Everyone can be raided','Кроме баз, которые построены с багами.':'Except bases built with bugs.',
+'Запрет на оффлайн-абуз багов':'No offline abuse of bugs','Использование эксплойтов построек запрещено.':'Using building exploits is forbidden.',
+'Не блокируй доступ к ресурсам':'Do not block access to resources','Не стройся на входах в мониторы и на дорогах.':'Do not build at monument entrances or on roads.',
+'Делись лутом честно':'Share loot fairly','Добычу рейда делите по договорённости.':'Split raid loot by agreement.',
+'Не строй рядом с монументами':'Do not build near monuments','Минимум 100 метров до зелёной зоны.':'At least 100 metres from a safe zone.',
+'Запрещён бесконечный спам построек':'Endless building spam is forbidden','Лишние объекты удаляются администрацией.':'Extra objects are removed by the administration.',
+'Не блокируй спавны':'Do not block spawns','Базы на пляжах и спавнах удаляются.':'Bases on beaches and spawns are removed.',
+'Скрытые базы разрешены':'Hidden bases are allowed','Но без использования багов геометрии.':'But without using geometry bugs.',
+'Без флуда и капса':'No flooding or all caps','Одно сообщение не чаще раза в 3 секунды.':'One message per 3 seconds at most.',
+'Без политики и оскорблений':'No politics or insults','Чат для игры, а не для споров.':'The chat is for the game, not for arguments.',
+'Язык общения свободный':'Any language is fine','Но администрация должна понимать, о чём речь.':'But the administration must understand what is said.',
+'Читы запрещены':'Cheats are forbidden','Бан без возможности обжалования.':'Ban with no appeal.',
+'Сообщай о багах':'Report bugs','Нашёл баг: напиши в Discord, а не используй его.':'Found a bug: write on Discord instead of using it.',
+'Макросы запрещены':'Macros are forbidden','Любая автоматизация действий недопустима.':'Any automation of actions is not allowed.',
+'Предупреждение':'Warning','Первое лёгкое нарушение.':'First minor violation.','Мут и временный бан':'Mute and temporary ban','Повторные нарушения.':'Repeated violations.',
+'Постоянный бан':'Permanent ban','Читы, мультиаккаунты, злоупотребление багами.':'Cheats, multi-accounts, bug abuse.',
+'Открыть меню китов':'Open the kit menu','Магазин предметов':'Item shop','Телепорт домой':'Teleport home','Запрос на телепорт к игроку':'Teleport request to a player','Твой ранг по времени':'Your playtime rank','Дата следующего вайпа':'Date of the next wipe','Удалить постройку':'Remove a building','Пожаловаться на игрока':'Report a player',
+/* top */
+'Топ игроков':'Top players','Поиск по нику':'Search by nickname','Игрок':'Player','Убийств':'Kills','Часов':'Hours','Ранг':'Rank','Игрок не найден.':'Player not found.',
+'Пока никого нет. Топ появится, когда игроки начнут играть.':'Nobody yet. The top will appear once players start playing.','Топ обновляется с игрового сервера.':'The top is updated from the game server.',
+/* donate */
+'Цены в евро. Возврат платежей запрещён: нельзя взять кит и вернуть деньги, это нечестно по отношению к другим игрокам.':'Prices are shown in your local currency. Refunds are not possible: taking a kit and getting the money back would be unfair to other players.',
+'Купить':'Buy','ХИТ':'HIT','Всё из':'Everything from','Приоритет в очереди':'Queue priority','Свой тег в чате':'Your own chat tag','Особый тег':'Special tag','Особый тег и цвет ника':'Special tag and nickname colour',
+'Цвет ника в чате':'Nickname colour in chat','Цвет ника':'Nickname colour','Скидка 10% в магазине':'10% shop discount','Скидка 15% в магазине':'15% shop discount','Все киты и особый тег':'All kits and a special tag',
+'Кит VIP раз в сутки':'VIP kit once a day','Кит':'Kit','Получить привилегию':'Get a privilege','Привилегии нет':'No privilege','Привилегия':'Privilege','Подробнее о возврате':'About refunds',
+/* faq */
+'Вопросы':'FAQ','Как зайти на сервер?':'How do I join the server?','Когда вайп?':'When is the wipe?','Что дают ранги?':'What do ranks give?','Как получить кит?':'How do I get a kit?','Можно ли вернуть донат?':'Can I get a donation refunded?','Как зарегистрироваться?':'How do I register?',
+'Ранги растут за часы игры и дают киты, скидки и теги. Список наград в разделе «Ранги».':'Ranks grow with hours played and give kits, discounts and tags. See the rewards in the “Ranks” section.',
+'Каждую пятницу в 19:00 по Европе (Берлин). Если на этой неделе первый четверг месяца, вайп проходит в этот четверг. Точные даты в разделе «Вайпы».':'Every Friday at 19:00 Europe (Berlin) time. If this week has the first Thursday of the month, the wipe happens that Thursday. Exact dates are in the “Wipes” section.',
+'После вайпа у некоторых китов есть задержка.':'Some kits have a delay after the wipe.',
+'Нет. Возврат запрещён. Иначе можно было бы взять кит и сразу вернуть деньги, а это нечестно по отношению к остальным игрокам.':'No. Refunds are not possible, otherwise someone could take a kit and immediately get the money back, which is unfair to other players.',
+/* community and footer */
+'Новости вайпов, промокоды, поддержка и поиск команды.':'Wipe news, promo codes, support and team search.','Скопировать ссылку':'Copy link',
+'Группа Steam':'Steam group','для игроков, которым нужен честный вайп и добрая атмосфера.':'for players who want a fair wipe and a friendly atmosphere.',
+'Условия использования':'Terms of use','Конфиденциальность':'Privacy','Политика возврата':'Refund policy','Возврат запрещён':'No refunds','Все права защищены.':'All rights reserved.',
+'является торговой маркой':'is a trademark of','Сервер неофициальный.':'The server is unofficial.','Карта и голосование':'Map and voting',
+'Играя на сервере и пользуясь сайтом, ты соглашаешься с правилами сервера. Администрация вправе выдать мут или бан за нарушения. Привилегии не дают права нарушать правила. Сервер неофициальный и не связан с Facepunch Studios.':'By playing on the server and using the site you agree to the server rules. The administration may mute or ban for violations. Privileges do not give the right to break the rules. The server is unofficial and not affiliated with Facepunch Studios.',
+'Для входа через Steam мы получаем только публичные данные: SteamID и ник. При входе через Google мы получаем имя и адрес почты. Пароли от Steam и Google не запрашиваются и не хранятся. Данные используются для кабинета, рангов, китов и привилегий и не передаются третьим лицам.':'When you sign in with Steam we only receive public data: SteamID and nickname. When you sign in with Google we receive your name and e-mail address. Steam and Google passwords are never requested or stored. The data is used for your account, ranks, kits and privileges and is not passed to third parties.',
+'Возврат платежей запрещён. Привилегии и киты выдаются сразу после оплаты, и иначе можно было бы взять кит и сразу вернуть деньги, а это нечестно по отношению к остальным игрокам. Если платёж прошёл с ошибкой или привилегия не выдана, напиши в Discord, и мы поможем.':'Refunds are not possible. Privileges and kits are delivered right after payment, otherwise someone could take a kit and immediately get the money back, which is unfair to other players. If a payment failed or a privilege was not delivered, write on Discord and we will help.',
+/* login and account */
+'Вход на сайт':'Sign in','Войти через Steam':'Sign in with Steam','Мой кабинет':'My account','Администратор':'Administrator','Регистрация':'Registered','Часов на сервере':'Hours on server','Steam ID':'Steam ID','Копировать':'Copy','активна':'active','Нет':'None',
+'Награда':'Reward','Награда:':'Reward:','Мои киты':'My kits','максимальный ранг':'maximum rank','до':'to','Связанные аккаунты':'Linked accounts','Привязан':'Linked','Привязать Steam':'Link Steam',
+'Можно входить любым способом, кабинет будет один.':'You can sign in either way, the account stays the same.',
+'Привяжи второй способ входа: тогда кабинет, ранг и права будут одинаковыми при входе через Steam и через Google.':'Link the second sign-in method: then your account, rank and rights are the same whether you sign in with Steam or Google.',
+'Уведомления на почту':'E-mail notifications','Голосование за карту':'Map voting','Новый вайп':'New wipe','Новости сервера':'Server news',
+'Подписки сохраняются сразу. Рассылка включится, когда подключим почтовый сервис.':'Subscriptions are saved immediately. E-mails will start once the mail service is connected.',
+'Ближайший вайп':'Next wipe','Голос за карту':'Map vote','Ты ещё не голосовал.':'You have not voted yet.','Твой голос:':'Your vote:','К голосованию':'Go to voting',
+'Редактор сайта':'Site editor','Открыть редактор':'Open editor','Настройки сайта':'Site settings','Настройки сохранены':'Settings saved',
+'Вход выполнен':'Signed in','Ты вышел из аккаунта':'You signed out','Подписка сохранена':'Subscription saved','Уведомления выключены':'Notifications off',
+'Не удалось войти через Google':'Could not sign in with Google','Не удалось начать привязку Steam':'Could not start linking Steam','Не удалось сохранить подписку':'Could not save the subscription','Не удалось сохранить настройки на сервер':'Could not save settings to the server',
+'Не удалось войти через Steam':'Could not sign in with Steam','Сервер сайта ещё не подключён, вход временно недоступен.':'The site server is not connected yet, sign-in is temporarily unavailable.',
+'Пароли мы не запрашиваем и не храним: вход подтверждают':'We never ask for or store passwords: sign-in is confirmed by',
+'Вход через Google скоро будет доступен.':'Google sign-in will be available soon.','Google недоступен. Попробуй':'Google is unavailable. Try',
+/* misc */
+'Нужна помощь':'Need help','Новая карта':'New map','Игрок':'Player'
+};

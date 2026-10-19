@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://limarust.github.io/sitemap.xml

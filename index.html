@@ -1,4 +1,23 @@
-<title>Lima Rust Сайт</title>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Lima Rust — сервер Rust (Facepunch) с китами, магазином, рулеткой, рангами и вайпами. IP, расписание вайпов, правила и Discord.">
+<meta name="keywords" content="Lima Rust, сервер Rust, Rust server, раст сервер, киты, вайп, Oxide">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#0c0e09">
+<link rel="canonical" href="https://limarust.github.io/">
+<link rel="icon" href="img/lemon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lima Rust">
+<meta property="og:title" content="Lima Rust — сервер Rust с китами, магазином и рулеткой">
+<meta property="og:description" content="Расписание вайпов, киты, магазин, ранги и правила сервера Lima Rust.">
+<meta property="og:url" content="https://limarust.github.io/">
+<meta property="og:image" content="https://limarust.github.io/img/ui/brand.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Lima Rust","alternateName":["LimaRust","Lima Rust сервер"],"url":"https://limarust.github.io/","inLanguage":["ru","en"]}</script>
+<title>Lima Rust — сервер Rust: киты, магазин, вайпы</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Rubik:wght@400;500;600&display=swap">
 <style>
@@ -282,6 +301,9 @@ input[type=checkbox]{accent-color:var(--lime);width:17px;height:17px}
 .me{white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
 </style>
 
+</head>
+<body>
+<noscript><h1>Lima Rust — сервер Rust</h1><p>Сервер Rust с китами, магазином, рулеткой, рангами и расписанием вайпов. Для работы сайта включите JavaScript.</p></noscript>
 <header><div class="wrap hd">
   <a class="brand-s" href="#home" aria-label="Lima Rust"><span id="logo-s"></span><span id="bn">Lima Rust</span></a>
   <nav class="main" id="nav" aria-label="Разделы"><div class="tabs" id="tabs"></div></nav>
@@ -463,7 +485,7 @@ const NAV=[['home','Главная'],['cabinet','Кабинет'],['ranks','Ра
 const RV={t:0,q:''};
 function renderSite(){
  $('#main').innerHTML=ORDER.filter(k=>k==='home'||k==='discord'||k==='cabinet'||C.show[k]).map(k=>SEC[k]()).join('');
- $('#bn').textContent=C.name;document.title=C.name+(LANG==='en'?' Site':' Сайт');document.documentElement.lang=LANG;
+ $('#bn').textContent=C.name;document.title=C.name+(LANG==='en'?' — Rust server: kits, shop, wipes':' — сервер Rust: киты, магазин, вайпы');document.documentElement.lang=LANG;
  $('#tabs').innerHTML=NAV.filter(([k])=>k==='home'||(k==='cabinet'?!!ACC:C.show[k])).map(([i,n])=>`<a href="#${i}" data-n="${i}">${n}</a>`).join('');
  $('#acc').innerHTML=`<span class="lg"><button data-setlang="ru" class="${LANG==='ru'?'on':''}">RU</button><button data-setlang="en" class="${LANG==='en'?'on':''}">EN</button></span>`+(ACC?`<span class="me"><i>${ACC.avatar?`<img src="${esc(ACC.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">`:esc(ACC.nick[0]||'L').toUpperCase()}</i>${esc(ACC.nick)}</span>`:`<button class="btn pri sm" data-login>Войти</button>`)+(isAdmin()?`<button class="ico" data-drawer aria-label="Настройки сайта" title="Настройки сайта">${SVG.gear}</button>`:'');
  footer();
@@ -605,3 +627,5 @@ $('#logo-s').innerHTML=LEMON(34);
  const doc=location.hash.slice(1);if(LEGAL[doc])legal(doc);
 })();
 </script>
+</body>
+</html>

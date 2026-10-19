@@ -199,6 +199,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   .hd>.btn{display:none}
 }
 @media(max-width:560px){section{padding-block:44px}.ttl i{display:none}.cd4 div{min-width:58px;padding:8px 10px}.cd4 b{font-size:24px}}
+/* phones: header fits 360px, no sideways scrolling */
+@media(max-width:480px){.hd{gap:8px}.brand-s{font-size:18px;gap:6px}#acc{gap:6px}.lg button{padding:7px 8px;font-size:12px}#acc .btn.sm{padding:8px 12px}.burger{flex:none;width:40px}.hero h1{font-size:clamp(34px,13vw,64px)}.grid.two{grid-template-columns:1fr}}
+html,body{overflow-x:clip}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 /* v3 additions */
 .hd .acc{display:flex;gap:8px;align-items:center}

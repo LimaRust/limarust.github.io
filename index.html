@@ -394,7 +394,7 @@ let C=DEFAULT();
 /* lima_site4: older saved copies (site3) held the previous icon ids, so they are intentionally not reused. */
 try{const s=localStorage.getItem('lima_site4');if(s)C=Object.assign(DEFAULT(),JSON.parse(s))}catch(e){}
 /* Saved copies replace whole sub-objects, so fill in any keys added later (e.g. wipe.dev, curMap.dev). */
-const normalizeC=()=>{const d=DEFAULT();C.wipe=Object.assign({},d.wipe,C.wipe);C.curMap=Object.assign({},d.curMap,C.curMap);C.show=Object.assign({},d.show,C.show);if(!C.blocks)C.blocks=d.blocks;if(!C.ranks||C.ranks.length<10)C.ranks=d.ranks};
+const normalizeC=()=>{const d=DEFAULT();C.wipe=Object.assign({},d.wipe,C.wipe);C.curMap=Object.assign({},d.curMap,C.curMap);C.show=Object.assign({},d.show,C.show);C.extraWipes=C.extraWipes||[];C.events=C.events||[];if(!C.blocks)C.blocks=d.blocks;if(!C.ranks||C.ranks.length<10)C.ranks=d.ranks};
 normalizeC();
 const save=()=>{try{localStorage.setItem('lima_site4',JSON.stringify(C))}catch(e){}pushSettings()};
 /* ===== API (Cloudflare Worker) ===== */
@@ -435,8 +435,25 @@ function berlinOff(t){const p=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/
 function berlin(y,m,d,h){let t=Date.UTC(y,m,d,h);t-=berlinOff(t);t=Date.UTC(y,m,d,h)-berlinOff(t);return t}
 function wipes(from,to){const out=[];const base=Date.UTC(2026,0,5);const n=new Date();const mon0=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())-((n.getUTCDay()+6)%7)*864e5;
  for(let w=-5;w<40;w++){const mon=mon0+w*7*864e5;const thu=new Date(mon+3*864e5),fri=new Date(mon+4*864e5);const force=C.wipe.thu&&thu.getUTCDate()<=7;const wi=Math.round((mon-base)/(7*864e5));
-  if(C.wipe.freq==='biweekly'&&!force&&wi%2)continue;const dd=force?thu:fri;const ts=berlin(dd.getUTCFullYear(),dd.getUTCMonth(),dd.getUTCDate(),+C.wipe.hour||19);out.push({ts,y:dd.getUTCFullYear(),m:dd.getUTCMonth(),d:dd.getUTCDate(),wd:dd.getUTCDay(),force})}
+  if(C.wipe.freq==='biweekly'&&!force&&wi%2)continue;const dd=force?thu:fri;const ts=berlin(dd.getUTCFullYear(),dd.getUTCMonth(),dd.getUTCDate(),+C.wipe.hour||19);out.push({ts,y:dd.getUTCFullYear(),m:dd.getUTCMonth(),d:dd.getUTCDate(),wd:dd.getUTCDay(),force,h:+C.wipe.hour||19})}
+ (C.extraWipes||[]).forEach(e=>{const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(e.date||'');if(!m)return;const y=+m[1],mo=+m[2]-1,d=+m[3];const k=out.findIndex(x=>x.y===y&&x.m===mo&&x.d===d);if(e.kind==='cancel'){if(k>=0)out.splice(k,1);return}const h=+e.hour||19;const item={ts:berlin(y,mo,d,h),y,m:mo,d,wd:new Date(Date.UTC(y,mo,d)).getUTCDay(),force:e.kind==='force',h};if(k>=0)out[k]=item;else out.push(item)});
+ out.sort((a,b)=>a.ts-b.ts);
  return out.filter(x=>x.ts>=from&&x.ts<to)}
+/* Events from the in-game schedule (same repeat rules as the menu). Days of the week are Monday-first. */
+const EVT={globalwipe:['Глобальный вайп','#e44028'],mapwipe:['Вайп карты','#61e366'],wipeblock:['Вайп-блок','#dab92e'],event:['Ивент','#c766d9'],custom:['Событие','#6b8af2']};
+function evOn(e,t){const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(e.date||'');if(!m)return false;const s=Date.UTC(+m[1],+m[2]-1,+m[3]),S=new Date(s),d=Date.UTC(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate());if(d<s)return false;
+ const iv=Math.max(1,+e.interval||1),dow=(t.getUTCDay()+6)%7,mb=(t.getUTCFullYear()-S.getUTCFullYear())*12+t.getUTCMonth()-S.getUTCMonth();
+ switch(e.mode){
+  case 'weekly':{const sm=s-((S.getUTCDay()+6)%7)*864e5,dm=d-dow*864e5;return !!(e.days&&e.days[dow])&&Math.round((dm-sm)/(7*864e5))%iv===0}
+  case 'monthday':{const dim=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate();return t.getUTCDate()===Math.min(S.getUTCDate(),dim)&&mb%iv===0}
+  case 'monthweekday':return t.getUTCDay()===S.getUTCDay()&&Math.floor((t.getUTCDate()-1)/7)===Math.floor((S.getUTCDate()-1)/7)&&mb%iv===0;
+  case 'yearly':return t.getUTCMonth()===S.getUTCMonth()&&t.getUTCDate()===S.getUTCDate()&&(t.getUTCFullYear()-S.getUTCFullYear())%iv===0;
+  default:return d===s}}
+function nextEvents(k){const out=[],now=Date.now(),b=new Date(now+berlinOff(now));
+ for(let i=0;i<90&&out.length<k+8;i++){const t=new Date(Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate()+i));
+  (C.events||[]).forEach(e=>{if(!evOn(e,t))return;const ts=berlin(t.getUTCFullYear(),t.getUTCMonth(),t.getUTCDate(),+e.hour||0)+(+e.minute||0)*6e4;if(ts>=now-36e5)out.push({e,ts,wd:t.getUTCDay(),d:t.getUTCDate(),m:t.getUTCMonth()})})}
+ return out.sort((a,b)=>a.ts-b.ts).slice(0,k)}
+const eventsBlock=()=>{const L=nextEvents(6);if(!L.length)return '';return `<div class="card" style="padding:8px;margin-top:16px"><div style="padding:10px 14px;color:var(--mute);font-size:13px">Ближайшие события</div>${L.map(x=>{const t=EVT[x.e.type]||EVT.custom;return `<div class="wk"><span>${WD[x.wd]}, ${x.d} ${MN[x.m]}<small>${String(x.e.hour).padStart(2,'0')}:${String(x.e.minute||0).padStart(2,'0')} Берлин${x.e.desc?' · '+esc(x.e.desc):''}</small></span><b style="color:${t[1]}">${t[0]}: ${esc(x.e.name)}</b></div>`}).join('')}</div>`};
 const nextWipes=k=>wipes(Date.now(),Date.now()+400*864e5).slice(0,k);
 const lastWipe=()=>{const a=wipes(Date.now()-40*864e5,Date.now());return a.length?a[a.length-1].ts:Date.now()-864e5};
 const sinceWipe=()=>(Date.now()-lastWipe())/1000;
@@ -481,7 +498,7 @@ kits(){const card=k=>`<div class="card kit ${k.type}">${embImg(k.img)}<div class
  const on=C.kits.filter(k=>k.on);const grp=(t,list)=>list.length?`<h3 class="grp">${t}</h3><div class="grid kits">${list.map(card).join('')}</div>`:'';
  return `<section id="kits"><div class="wrap">${ttl('Киты')}${grp('Бесплатные киты',on.filter(k=>k.type!=='prem'))}${grp('Премиум киты',on.filter(k=>k.type==='prem'))}</div></section>`},
 wipe(){const L=nextWipes(7);const w=L[0];const fm=x=>`${WD[x.wd]}, ${x.d} ${MN[x.m]}`;const dev=wipeDev();
- return `<section id="wipe"><div class="wrap">${ttl('Расписание вайпов')}<div class="grid two"><div class="card next"><span>Следующий вайп</span><b class="px">${dev?'В разработке':w?fm(w)+', '+C.wipe.hour+':00':''}</b>${dev?'':`<span style="font-size:13px;font-weight:500">по Европе (Берлин)${w?` · у тебя ${new Date(w.ts).toLocaleString(LANG==='en'?'en-GB':'ru-RU',{weekday:'short',hour:'2-digit',minute:'2-digit'})}`:''}</span><div class="cd4" id="cd"></div>`}<a class="btn" style="background:var(--lime-d);color:var(--lime)" href="#discord">Напомнить в Discord</a></div><div class="card" style="padding:8px">${dev?`<div style="padding:34px 18px;text-align:center"><b style="font:700 26px var(--f-px);color:var(--orange)">В разработке</b><p class="mut" style="margin:10px 0 0">Расписание вайпов появится ${devUntilText()}.</p></div>`:`<div style="padding:10px 14px;color:var(--mute);font-size:13px">${C.wipe.freq==='weekly'?'Каждую пятницу':'Раз в две недели по пятницам'}. Первый четверг месяца: вайп в четверг.</div>${L.map((x,i)=>`<div class="wk"><span>${fm(x)}<small>${C.wipe.hour}:00 Берлин</small></span><b style="color:${x.force?'var(--orange)':'var(--lime)'}">${i?x.force?'Форс-вайп':'Вайп':'Ближайший'}</b></div>`).join('')}`}</div></div></div></section>`},
+ return `<section id="wipe"><div class="wrap">${ttl('Расписание вайпов')}<div class="grid two"><div class="card next"><span>Следующий вайп</span><b class="px">${dev?'В разработке':w?fm(w)+', '+w.h+':00':''}</b>${dev?'':`<span style="font-size:13px;font-weight:500">по Европе (Берлин)${w?` · у тебя ${new Date(w.ts).toLocaleString(LANG==='en'?'en-GB':'ru-RU',{weekday:'short',hour:'2-digit',minute:'2-digit'})}`:''}</span><div class="cd4" id="cd"></div>`}<a class="btn" style="background:var(--lime-d);color:var(--lime)" href="#discord">Напомнить в Discord</a></div><div class="card" style="padding:8px">${dev?`<div style="padding:34px 18px;text-align:center"><b style="font:700 26px var(--f-px);color:var(--orange)">В разработке</b><p class="mut" style="margin:10px 0 0">Расписание вайпов появится ${devUntilText()}.</p></div>`:`<div style="padding:10px 14px;color:var(--mute);font-size:13px">${C.wipe.freq==='weekly'?'Каждую пятницу':'Раз в две недели по пятницам'}. Первый четверг месяца: вайп в четверг.</div>${L.map((x,i)=>`<div class="wk"><span>${fm(x)}<small>${x.h}:00 Берлин</small></span><b style="color:${x.force?'var(--orange)':'var(--lime)'}">${i?x.force?'Форс-вайп':'Вайп':'Ближайший'}</b></div>`).join('')}`}</div></div>${eventsBlock()}</div></section>`},
 rules(){const cats=[...C.rules.map(x=>x.c),'Команды'];const q=(RV.q||'').trim().toLowerCase();const t=Math.min(RV.t,cats.length-1);let body='';
  if(q){const hits=[];C.rules.forEach(c=>c.r.forEach(r=>{if((r[0]+' '+r[1]).toLowerCase().includes(q))hits.push([c.c,r])}));C.cmds.forEach(c=>{if((c[0]+' '+c[1]).toLowerCase().includes(q))hits.push(['Команды',c])});body=`<h3>Результаты поиска</h3>${hits.map(([c,r])=>`<div class="rule"><div class="n">·</div><div><b>${esc(r[0])}</b><span>${esc(r[1])} <em style="color:var(--dim)">(${esc(c)})</em></span></div></div>`).join('')||'<p class="mut">Ничего не найдено.</p>'}`}
  else if(t===cats.length-1)body=`<h3>Команды</h3><p class="mut" style="margin:-8px 0 12px">Нажми на команду, чтобы скопировать.</p><div class="grid" style="gap:10px">${C.cmds.map(c=>`<div class="cmd"><code data-cp="${esc(c[0])}">${esc(c[0])}</code><span class="mut">${esc(c[1])}</span></div>`).join('')}</div>`;
@@ -543,7 +560,7 @@ async function loadLive(){
  if(!apiOn())return;
  try{LIVE.status=await api('/api/status');const s=LIVE.status;if(s.top&&s.top.length)TOP=s.top.map(p=>[p.name,p.kills,p.hours]);if(s.map&&s.map.name){C.curMap.name=s.map.name;C.curMap.seed=s.map.seed;C.curMap.size=s.map.size}}catch(e){}
  try{LIVE.pricing=await api('/api/pricing')}catch(e){}
- try{const st=await api('/api/settings');if(st&&Object.keys(st).length){Object.assign(C,st);normalizeC()}}catch(e){}}
+ try{const st=await api('/api/settings');if(st&&Object.keys(st).length){const was=JSON.stringify([C.wipe,C.extraWipes,C.events]);Object.assign(C,st);normalizeC();if(JSON.stringify([C.wipe,C.extraWipes,C.events])!==was&&document.getElementById('main')&&document.getElementById('main').children.length)renderSite()}}catch(e){}}
 /* A short-lived token lets the Worker attach the Steam account that signs in next to this Google account. */
 async function linkSteam(){
  try{const r=await api('/api/auth/link-token',{method:'POST'});location.href=API_URL+'/api/auth/steam?l='+encodeURIComponent(r.token)}

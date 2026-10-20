@@ -113,6 +113,7 @@ section{padding-block:64px}
 .bk .bt{font:700 16px var(--f-px);color:var(--orange)}
 .bk.open{border-color:var(--lime)}
 .bk.open .bt{color:var(--lime)}
+.vt{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.vc{display:flex;flex-direction:column;gap:8px}.vc.mine{border-color:var(--lime)}.vn{font:700 12px var(--f-px);color:var(--orange)}.vb{height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}.vb i{display:block;height:100%;background:var(--lime)}.vs small{display:block;color:var(--mute);font-size:12px}.nw{display:grid;gap:12px}
 .rlm{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1px;background:var(--orange);box-shadow:0 0 14px var(--orange);z-index:2}
 .rlw::before,.rlw::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:1;pointer-events:none}
 .rlw::before{left:0;background:linear-gradient(90deg,#10120c,transparent)}.rlw::after{right:0;background:linear-gradient(270deg,#10120c,transparent)}
@@ -369,7 +370,7 @@ const DEFAULT=()=>({
  name:'Lima Rust',region:'EU',rates:'2x',type:'VANILLA+',ip:'lima.rust:28015',mapSize:3500,
  discord:'discord.gg/fVWnrjjS5u',telegram:'t.me/LimaRust',steam:'steamcommunity.com/groups/LimaRust',pay:'',admins:[{id:'76561198000000001',nick:'Демо-админ'}],players:[{id:'76561198000000002',nick:'Демо-VIP',priv:'VIP',hours:95}],
  promo:{on:true,text:'Донат x2 до воскресенья: двойные лаймы на любое пополнение'},
- show:{why:true,ranks:true,map:true,kits:true,wipe:true,blocks:true,rules:true,top:true,donate:true,faq:true},
+ show:{news:true,vote:true,why:true,ranks:true,map:true,kits:true,wipe:true,blocks:true,rules:true,top:true,donate:true,faq:true},
  wipe:{freq:'weekly',hour:19,thu:true,dev:true,devUntil:'2027-01-25'},
  curMap:{name:'Лимонный остров',seed:777,size:3500,dev:true},
  maps:[{name:'Солнечный берег',seed:2026,size:3500,votes:41},{name:'Кислые холмы',seed:4242,size:3800,votes:27},{name:'Цитрусовый архипелаг',seed:9001,size:3000,votes:18}],
@@ -511,11 +512,19 @@ donate(){return `<section id="donate"><div class="wrap">${ttl('Донат')}<div
  const next=B.find(b=>lw+b.s*1000>Date.now());
  const body=Object.keys(grp).map(Number).sort((a,b)=>a-b).map(s=>`<h3 class="grp">${hrs(s)} <span class="mut" style="font:500 15px var(--f-ui)" data-blkg="${lw+s*1000}"></span></h3><div class="grid blk">${grp[s].map(b=>`<div class="card bk" data-bk="${lw+b.s*1000}"><img src="https://rustlabs.com/img/items180/${esc(b.id)}.png" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>${esc(b.n)}</b><span class="bt">—</span></div>`).join('')}</div>`).join('');
  return `<section id="blocks"><div class="wrap">${ttl('Вайп-блоки')}<p class="note" style="margin:-14px 0 24px">После вайпа сильные предметы открываются постепенно, чтобы у всех был честный старт. Время считается от последнего вайпа.${next?` Следующий откроется: <b style="color:var(--lime)">${esc(next.n)}</b>, <span data-blkn="${lw+next.s*1000}"></span>.`:' Сейчас всё доступно.'}</p>${body}</div></section>`},
+vote(){const d=LIVE.pollData,p=d&&d.poll;let body;
+ if(!p)body='<p class="mut" style="text-align:center">Сейчас нет голосования. Следи за новостями в Discord.</p>';
+ else{const tot=p.options.reduce((s,o)=>s+o.total,0),open=p.status==='open'&&p.endsAt*1000>Date.now();
+  body=`<div class="grid vt">${p.options.map((o,i)=>{const pc=tot?Math.round(o.total/tot*100):0;return `<div class="card vc${p.myVote===i?' mine':''}"><span class="vn">Карта ${i+1}</span><b>${esc(o.label||'Seed '+o.seed)}</b><span class="mut">Seed ${o.seed} · ${o.size}</span><div class="vb"><i style="width:${pc}%"></i></div><div class="vs"><b>${o.total}</b> (${pc}%)<small>Discord ${o.discord} · сайт ${o.site}</small></div><a class="lk" href="https://rustmaps.com/map/${o.size}_${o.seed}" target="_blank" rel="noopener">RustMaps</a>${open?`<button class="btn${p.myVote===i?' pri':''}" data-vote="${i}">${p.myVote===i?'Твой голос':'Голосовать'}</button>`:''}</div>`}).join('')}</div><p class="note">${open?'Закончится '+new Date(p.endsAt*1000).toLocaleString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})+'. ':'Голосование завершено. '}Голоса из Discord и с сайта считаются вместе. Чтобы голосовать, войди через Steam или Google.</p>`}
+ const nm=d&&d.nextMap?`<p class="note" style="color:var(--lime)">Следующая карта: ${esc(d.nextMap.label||'')} Seed ${d.nextMap.seed} · ${d.nextMap.size}</p>`:'';
+ return `<section id="vote"><div class="wrap">${ttl('Голосование за карту')}${body}${nm}</div></section>`},
+news(){const L=LIVE.news||[],KM={update:'Обновление',optimization:'Оптимизация',event:'Событие',map:'Карта',other:'Новость'};
+ return `<section id="news"><div class="wrap">${ttl('Новости')}${L.length?`<div class="nw">${L.map(n=>`<div class="card"><span class="mut">${new Date(n.created*1000).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long'})} · ${KM[n.kind]||'Новость'}</span><h3>${esc(n.title)}</h3><p class="mut" style="white-space:pre-line;margin:0">${esc(n.body.replace(/\*\*/g,'').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1'))}</p></div>`).join('')}</div>`:'<p class="mut" style="text-align:center">Новостей пока нет.</p>'}</div></section>`},
 faq(){return `<section id="faq"><div class="wrap">${ttl('Вопросы')}<div class="faq">${C.faq.map((f,i)=>`<details ${i===0?'open':''}><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('')}</div></div></section>`},
 discord(){return `<section id="discord"><div class="wrap">${ttl('Сообщество')}<div class="grid two"><div class="card dis"><span style="color:var(--green)">${SVG.dc.replace('width="20" height="20"','width="48" height="48"')}</span><div class="big">${esc(C.discord)}</div><p class="mut" style="margin:0">Новости вайпов, промокоды, поддержка и поиск команды.</p><button class="btn pri" data-cp="${esc(C.discord)}">Скопировать ссылку</button></div><div class="card dis"><span style="color:var(--orange)">${SVG.tg.replace('width="20" height="20"','width="48" height="48"')}</span><div class="big" style="color:var(--orange)">${esc(C.telegram)}</div><p class="mut" style="margin:0">Анонсы вайпов и акций прямо в Telegram.</p><button class="btn org" data-cp="${esc(C.telegram)}">Скопировать ссылку</button></div></div></div></section>`}
 };
-const ORDER=['home','cabinet','why','ranks','map','kits','wipe','blocks','rules','top','donate','faq','discord'];
-const NAV=[['home','Главная'],['cabinet','Кабинет'],['ranks','Ранги'],['map','Карта'],['kits','Киты'],['wipe','Вайпы'],['blocks','Блоки'],['rules','Правила'],['top','Топ'],['donate','Донат'],['faq','FAQ']];
+const ORDER=['home','news','cabinet','why','ranks','map','vote','kits','wipe','blocks','rules','top','donate','faq','discord'];
+const NAV=[['home','Главная'],['news','Новости'],['cabinet','Кабинет'],['ranks','Ранги'],['map','Карта'],['vote','Голосование'],['kits','Киты'],['wipe','Вайпы'],['blocks','Блоки'],['rules','Правила'],['top','Топ'],['donate','Донат'],['faq','FAQ']];
 const RV={t:0,q:''};
 function renderSite(){
  $('#main').innerHTML=ORDER.filter(k=>k==='home'||k==='discord'||k==='cabinet'||C.show[k]).map(k=>SEC[k]()).join('');
@@ -556,10 +565,18 @@ async function loadSession(){
  try{const m=await api('/api/me');
   ACC={provider:m.provider,role:m.role,avatar:m.avatar||'',topics:m.topics||[],steamId:m.steamId||'',email:m.email||'',nick:m.name||(m.steamId?'Игрок'+m.steamId.slice(-4):'Игрок'),since:(m.firstSeen||Date.now()/1000)*1000,hours:+m.hours||0,priv:m.priv||(m.role==='admin'?'Администратор':'—'),kits:m.kits||{}}}
  catch(e){if(String(e.message)==='http_401'){tokenSet('');ACC=null}}}
+async function loadCommunity(){let ch=false;
+ try{const n=await api('/api/news');if(JSON.stringify(n)!==JSON.stringify(LIVE.news)){LIVE.news=n;ch=true}}catch(e){}
+ try{const p=await api('/api/poll');if(JSON.stringify(p)!==JSON.stringify(LIVE.pollData)){LIVE.pollData=p;ch=true}}catch(e){}
+ const m=document.getElementById('main');if(ch&&m&&m.children.length)renderSite()}
+async function castSiteVote(i){if(!ACC){toast('Войди через Steam или Google, чтобы голосовать');return}
+ try{LIVE.pollData=await api('/api/poll/vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({option:i})});renderSite();toast('Голос учтён')}
+ catch(e){toast(String(e.message)==='http_400'?'Голосование уже закончилось':'Не удалось проголосовать')}}
 async function loadLive(){
  if(!apiOn())return;
  try{LIVE.status=await api('/api/status');const s=LIVE.status;if(s.top&&s.top.length)TOP=s.top.map(p=>[p.name,p.kills,p.hours]);if(s.map&&s.map.name){C.curMap.name=s.map.name;C.curMap.seed=s.map.seed;C.curMap.size=s.map.size}}catch(e){}
  try{LIVE.pricing=await api('/api/pricing')}catch(e){}
+ await loadCommunity();
  try{const st=await api('/api/settings');if(st&&Object.keys(st).length){const was=JSON.stringify([C.wipe,C.extraWipes,C.events]);Object.assign(C,st);normalizeC();if(JSON.stringify([C.wipe,C.extraWipes,C.events])!==was&&document.getElementById('main')&&document.getElementById('main').children.length)renderSite()}}catch(e){}}
 /* A short-lived token lets the Worker attach the Steam account that signs in next to this Google account. */
 async function linkSteam(){
@@ -603,7 +620,7 @@ const TPL={map:()=>({name:'Новая карта',seed:Math.random()*9999|0,size
 function drawer(){$('#dt').innerHTML=SECT.map(([k,n])=>`<button class="${AS===k?'on':''}" data-as="${k}">${n}</button>`).join('');
  let h='';
  if(AS==='gen')h=`<h3>Сервер</h3><div class="er w">${I('name',C.name,'','Название')}${I('region',C.region,'s','Регион')}${I('rates',C.rates,'s','Рейты')}${I('type',C.type,'s','Тип')}</div><div class="er">${I('ip',C.ip,'','IP:порт')}${N('mapSize',C.mapSize)}</div><div class="lb">Текущая карта</div>${K('curMap.dev',C.curMap.dev,'Показывать «В разработке» вместо карты')}<div class="er">${I('curMap.name',C.curMap.name,'','Название')}${N('curMap.seed',C.curMap.seed)}${N('curMap.size',C.curMap.size)}</div><div class="er"><label class="btn sm" style="cursor:pointer">Загрузить картинку<input type="file" accept="image/*" data-mu="curMap" hidden></label>${C.curMap.img?`<button class="btn sm" data-mclear="curMap">Убрать картинку</button>`:'<span class="mut">Сейчас рисуется по seed</span>'}</div><div class="lb">Блок «Зачем играть у нас»</div>${C.why.map((w,i)=>`<div class="er">${I('why.'+i+'.t',w.t,'s','Заголовок')}${I('why.'+i+'.d',w.d,'','Текст')}${X('why',i)}</div>`).join('')}${ADD('why','why','Пункт')}`;
- if(AS==='show')h=`<h3>Какие разделы показывать</h3>${[['why','Зачем играть у нас'],['ranks','Ранги'],['map','Карта и голосование'],['kits','Киты'],['wipe','Расписание вайпов'],['rules','Правила и команды'],['top','Топ игроков'],['donate','Донат'],['faq','Вопросы']].map(([k,n])=>K('show.'+k,C.show[k],n)).join('')}<div class="lb">Акция</div>${K('promo.on',C.promo.on,'Показывать баннер акции')}<div class="er">${I('promo.text',C.promo.text,'','Текст акции')}</div>`;
+ if(AS==='show')h=`<h3>Какие разделы показывать</h3>${[['why','Зачем играть у нас'],['ranks','Ранги'],['news','Новости'],['vote','Голосование за карту'],['map','Карта'],['kits','Киты'],['wipe','Расписание вайпов'],['rules','Правила и команды'],['top','Топ игроков'],['donate','Донат'],['faq','Вопросы']].map(([k,n])=>K('show.'+k,C.show[k],n)).join('')}<div class="lb">Акция</div>${K('promo.on',C.promo.on,'Показывать баннер акции')}<div class="er">${I('promo.text',C.promo.text,'','Текст акции')}</div>`;
  if(AS==='wipe')h=`<h3>Вайп</h3><div class="mut">Дни по Европе (Берлин). Время указывается по Берлину.</div><label class="er">Частота<select class="in s" style="width:190px;flex:none" data-p="wipe.freq" data-ty="s"><option value="weekly" ${C.wipe.freq==='weekly'?'selected':''}>Каждую неделю</option><option value="biweekly" ${C.wipe.freq==='biweekly'?'selected':''}>Раз в две недели</option></select></label><label class="er">Час вайпа ${N('wipe.hour',C.wipe.hour)}</label>${K('wipe.thu',C.wipe.thu,'Первый четверг месяца: вайп в четверг, а не в пятницу')}${K('wipe.dev',C.wipe.dev,'Таймер «до вайпа» и расписание: показывать «В разработке»')}<label class="er">Выключится само после даты ${I('wipe.devUntil',C.wipe.devUntil||'','s','ГГГГ-ММ-ДД')}</label>${wipeDev()?'':'<div class="mut">Сейчас «В разработке» не показывается.</div>'}<div class="mut">Следующие вайпы: ${nextWipes(4).map(x=>x.d+' '+MN[x.m]).join(', ')}</div>`;
  if(AS==='maps')h=`<h3>Карты для голосования</h3>${C.maps.map((m,i)=>`<div class="er">${I('maps.'+i+'.name',m.name,'','Название')}${N('maps.'+i+'.seed',m.seed)}${N('maps.'+i+'.size',m.size)}${N('maps.'+i+'.votes',m.votes)}${X('maps',i)}</div><div class="er"><label class="btn sm" style="cursor:pointer">Загрузить картинку<input type="file" accept="image/*" data-mu="maps.${i}" hidden></label>${m.img?`<button class="btn sm" data-mclear="maps.${i}">Убрать картинку</button>`:'<span class="mut">Сейчас рисуется по seed</span>'}</div>`).join('')}<div class="mut">Название, seed, размер, голоса.</div>${ADD('maps','map','Карта')}`;
  if(AS==='ranks')h=`<h3>Ранги по времени</h3>${C.ranks.map((r,i)=>`<div class="er">${I('ranks.'+i+'.n',r.n,'s','Ранг')}${N('ranks.'+i+'.h',r.h)}${I('ranks.'+i+'.r',r.r,'','Награда')}${X('ranks',i)}</div>`).join('')}<div class="mut">Название, часы, награда. Держи ранги по возрастанию часов.</div>${ADD('ranks','rank','Ранг')}`;
@@ -626,6 +643,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t.dataset||!t.datase
 document.addEventListener('click',e=>{const z=e.target.closest('[data-zoom]');if(z){const src=z.tagName==='CANVAS'?z.toDataURL():z.src;modal(`<img class="zimg" src="${src}" alt="Карта"><div class="row"><button class="btn pri" data-close>Закрыть</button></div>`);return}
  const t=e.target.closest('button,a,[data-cp]');if(!t){if(e.target.id==='ov')closeM();return}const d=t.dataset;
  if(d.cp)copy(d.cp);
+ else if(d.vote!==undefined)castSiteVote(+d.vote);
  else if(d.setlang)setLang(d.setlang);
  else if(t.hasAttribute('data-login'))loginM();
  else if(t.hasAttribute('data-logout')){ACC=null;saveA();$('#dr').classList.remove('on');renderSite();toast('Ты вышел из аккаунта')}

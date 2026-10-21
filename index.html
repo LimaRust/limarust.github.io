@@ -221,6 +221,14 @@ html,body{overflow-x:clip}
 .badge.lime{background:var(--lime);color:var(--lime-d);border-color:var(--lime)}.badge.org{background:var(--orange);color:#2a1604;border-color:var(--orange)}
 .kr{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--panel);border-radius:8px;font-size:14px}
 .kr b{font-variant-numeric:tabular-nums}.ok{color:var(--lime)}.wt{color:var(--orange)}
+.vc{flex-direction:row;gap:14px;align-items:stretch;padding:12px}.vc.lead{border-color:var(--orange)}.vc.mine{border-color:var(--lime)}
+.vpic{flex:none;width:132px;height:132px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#10120c;display:flex;align-items:center;justify-content:center;color:var(--mute);text-decoration:none}
+.vpic img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s}.vpic:hover img{transform:scale(1.08)}
+.vbody{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}.vtop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.vname{font-size:18px}
+.vmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.vmon{display:flex;gap:5px;flex-wrap:wrap}
+.mc{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);white-space:nowrap}
+.vact{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+@media(max-width:560px){.vc{flex-direction:column}.vpic{width:100%;height:auto;aspect-ratio:16/10}}
 .mapg{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px}
 .mapc{padding:18px;display:flex;flex-direction:column;gap:12px;align-items:center}
 .mapc canvas{width:100%;max-width:380px;aspect-ratio:1;image-rendering:pixelated;border-radius:10px;border:1px solid var(--line);background:#10120c}
@@ -480,8 +488,12 @@ function pollBlock(){const d=LIVE.pollData,p=d&&d.poll;
  const head=`<div><b style="font-size:18px">Голосование за следующую карту</b><div class="mut" style="font-size:14px">Голоса из Discord и с сайта считаются вместе. Один голос на аккаунт, его можно изменить.</div></div>`;
  if(!p)return `<div style="display:grid;gap:12px;align-content:start">${head}<div class="card"><p class="mut" style="margin:0">Сейчас голосования нет. Когда администрация запустит его в Discord, карты появятся здесь.</p></div>${nextMapNote(d)}</div>`;
  const tot=p.options.reduce((s,o)=>s+o.total,0),open=p.status==='open'&&p.endsAt*1000>Date.now();
- const cards=p.options.map((o,i)=>{const pc=tot?Math.round(o.total/tot*100):0,name=o.label||(o.seed?'Seed '+o.seed:'Карта '+(i+1));
-  return `<div class="card vc${p.myVote===i?' mine':''}"><span class="vn">Карта ${i+1}</span><b>${esc(name)}</b>${o.seed?`<span class="mut" style="font-size:13px">Seed ${o.seed} · размер ${o.size}</span>`:''}<div class="vb"><i style="width:${pc}%"></i></div><div class="vs"><b>${o.total}</b> голосов · ${pc}%<small>Discord ${o.discord} · сайт ${o.site}</small></div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><a class="lk" href="${esc(o.url||'https://rustmaps.com/map/'+o.size+'_'+o.seed)}" target="_blank" rel="noopener">Открыть карту</a>${open?`<button class="btn sm${p.myVote===i?'':' pri'}" data-vote="${i}">${p.myVote===i?'Твой голос':'Голосовать'}</button>`:''}</div></div>`}).join('');
+ const lead=tot?p.options.reduce((m,o,i)=>o.total>p.options[m].total?i:m,0):-1;
+ const cards=p.options.map((o,i)=>{const pc=tot?Math.round(o.total/tot*100):0,name=o.label||(o.seed?'Seed '+o.seed:'Карта '+(i+1)),link=esc(o.url||'https://rustmaps.com/map/'+o.size+'_'+o.seed);
+  const mons=(o.monuments||[]).slice(0,10).map(m=>'<span class="mc">'+esc(m)+'</span>').join(''),more=(o.monuments||[]).length>10?'<span class="mc mut">+'+((o.monuments||[]).length-10)+'</span>':'';
+  const miss=(o.missing||[]).length?'<div class="mut" style="font-size:12px">Нет: '+esc((o.missing||[]).slice(0,6).join(', '))+'</div>':'';
+  const pic=o.img?'<a href="'+link+'" target="_blank" rel="noopener" class="vpic"><img src="'+esc(o.img)+'" alt="'+esc(name)+'" loading="lazy" referrerpolicy="no-referrer"></a>':'<a href="'+link+'" target="_blank" rel="noopener" class="vpic ph">Карта</a>';
+  return `<div class="card vc${p.myVote===i?' mine':''}${lead===i&&tot?' lead':''}">${pic}<div class="vbody"><div class="vtop"><span class="vn">Карта ${i+1}</span>${lead===i&&tot?'<span class="badge lime">Лидирует</span>':''}${p.myVote===i?'<span class="badge org">Твой голос</span>':''}</div><b class="vname">${esc(name)}</b><div class="vmeta">${o.seed?'<span class="mc">Seed '+o.seed+'</span><span class="mc">'+o.size+' м</span>':''}<a class="lk" href="${link}" target="_blank" rel="noopener">Открыть на RustMaps</a></div>${mons?'<div class="vmon">'+mons+more+'</div>'+miss:''}<div class="vb"><i style="width:${pc}%"></i></div><div class="vact"><div class="vs"><b>${o.total}</b> голосов · ${pc}%<small>Discord ${o.discord} · сайт ${o.site}</small></div>${open?`<button class="btn sm${p.myVote===i?'':' pri'}" data-vote="${i}">${p.myVote===i?'Изменить голос':'Голосовать'}</button>`:''}</div></div></div>`}).join('');
  const when=open?'Закончится '+new Date(p.endsAt*1000).toLocaleString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})+'.':'Голосование завершено.';
  return `<div style="display:grid;gap:12px;align-content:start">${head}${cards}<p class="note" style="margin:0">${when}${ACC?'':' Чтобы голосовать, войди через Steam или Google.'}</p>${nextMapNote(d)}</div>`}
 const nextMapNote=d=>d&&d.nextMap?`<p class="note" style="margin:0;color:var(--lime)">Следующая карта: ${esc(d.nextMap.label||'')} ${d.nextMap.seed?'Seed '+d.nextMap.seed+' · '+d.nextMap.size:''}</p>`:'';

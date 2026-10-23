@@ -1,6 +1,16 @@
 /* English texts for the site. Keys are the Russian originals; the page swaps them at render time when EN is selected.
    Longer keys win over shorter ones, so full sentences can be listed next to single words. */
 const EN={
+/* tabs and the home map */
+'Пожелания':'Wishes','Вики':'Wiki','Обновления':'Updates','Куда пойдём?':'Where to?','Бесплатные и премиум':'Free and premium','Награды за время игры':'Rewards for playtime',
+'Привилегии сервера':'Server privileges','Расписание':'Schedule','Текущий вайп и голосование':'Current wipe and voting','Когда откроются предметы':'When items unlock',
+'Крафт и все предметы':'Crafting and all items','И команды':'And commands','Лучшие игроки':'Best players','Из жизни сервера':'Server news','Ответы на вопросы':'Answers',
+'НОВОЕ В RUST':'NEW IN RUST','все обновления с 2023 года':'all updates since 2023','Читать полностью →':'Read more →','← Все обновления':'← All updates',
+'Все годы':'All years','Все':'All','Обновления Rust':'Rust updates','Вики: предметы и крафт':'Wiki: items and crafting','Рейды и калькуляторы':'Raids and calculators',
+'Рейды':'Raids','Показать ещё':'Show more','Поиск предмета, например: ak, metal, door':'Search an item, for example: ak, metal, door',
+'Все большие обновления игры с 2023 года из официальных объявлений Facepunch. Новое появляется само.':'All big game updates since 2023 from the official Facepunch announcements. New ones appear on their own.',
+'Любой предмет игры: из чего крафтится, сколько времени и какой нужен верстак. Данные взяты из самой игры нашего сервера.':'Every item of the game: what it is crafted from, how long it takes and which workbench it needs. The data comes from the game of our server.',
+
 /* navigation and common */
 'Главная':'Home','Кабинет':'Account','Ранги':'Ranks','Карта':'Map','Киты':'Kits','Вайпы':'Wipes','Правила':'Rules','Топ':'Top','Донат':'Donate','FAQ':'FAQ',
 'Войти':'Sign in','Выйти из аккаунта':'Sign out','Подробнее':'More','Назад':'Back','Дальше':'Next','Закрыть':'Close','Отмена':'Cancel','Понятно':'Got it','Копировать':'Copy','Скопировано':'Copied',

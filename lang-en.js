@@ -1,6 +1,7 @@
 /* English texts for the site. Keys are the Russian originals; the page swaps them at render time when EN is selected.
    Longer keys win over shorter ones, so full sentences can be listed next to single words. */
 const EN={
+'Генетика':'Genetics','Растения':'Plants','Животные':'Livestock',
 /* tabs and the home map */
 'Пожелания':'Wishes','Вики':'Wiki','Обновления':'Updates','Куда пойдём?':'Where to?','Бесплатные и премиум':'Free and premium','Награды за время игры':'Rewards for playtime',
 'Привилегии сервера':'Server privileges','Расписание':'Schedule','Текущий вайп и голосование':'Current wipe and voting','Когда откроются предметы':'When items unlock',

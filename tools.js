@@ -13,7 +13,7 @@
 
   const TABS = [
     ['smash', 'Сломай стену', 'Break the wall'], ['raid', 'Рейд', 'Raid'], ['eco', 'Эко-рейд', 'Eco raid'], ['wall', 'Стена и инструмент', 'Wall and tool'], ['decay', 'Гниение', 'Decay'],
-    ['codes', 'Коды замков', 'Door codes'], ['mine', 'Карьер, насос, экскаватор', 'Quarry, pump, excavator'], ['genes', 'Гены растений', 'Plant genes'],
+    ['codes', 'Коды замков', 'Door codes'], ['mine', 'Карьер, насос, экскаватор', 'Quarry, pump, excavator'],
   ];
   const TIER = { twig: ['Солома', 'Twig'], wood: ['Дерево', 'Wood'], stone: ['Камень', 'Stone'], metal: ['Листовой металл', 'Sheet metal'], toptier: ['Бронированный (МВК)', 'Armored'] };
   const DOOR = {
@@ -114,7 +114,7 @@
   // vehicle and special ammo: it works, but nobody raids with it, so it is shown only on request
   const EXO = new Set(['catapult.ammo.boulder', 'submarine.torpedo.straight', 'ammo.rocket.mlrs', 'ammo.rocket.seeker', 'ballista.bolt.hammerhead', 'grenade.flashbang']);
   const TSW = { twig: '#b59a56', wood: '#9a6a34', stone: '#9aa093', metal: '#7a8da0', toptier: '#4b535d' };
-  S.base = [{ id: 'tier:stone', qty: 1, hp: 0 }]; S.show = 'x'; S.sort = 'sulfur';
+  S.base = [{ id: 'tier:stone', qty: 1, hp: 0 }]; S.show = 'x'; S.sort = 'sulfur'; S.view = 'table';
   const parseBase = (s) => s.split(',').map((p) => { const [id, q, h] = p.split('*'); return { id, qty: Math.max(1, Math.min(999, +q || 1)), hp: Math.max(0, +h || 0) }; }).filter((x) => x.id);
   function loadBase() {
     const m = location.hash.match(/[?&]b=([^&]+)/);
@@ -177,8 +177,16 @@
     const fast = rows.slice().sort((p, q) => p.time - q.time)[0];
     const total = S.base.reduce((s, b) => s + b.qty, 0);
     const chips = (k, list) => '<div class="fch" style="margin:0">' + list.map(([v, ru, en]) => '<button class="fc' + (S[k] === v ? ' on' : '') + '" data-t' + k + '="' + v + '">' + T(ru, en) + '</button>').join('') + '</div>';
-    const head = '<div class="trep"><div class="tnote" style="margin:0">' + T('Целей', 'Targets') + ': <b>' + total + '</b> · ' + S.base.map((b) => esc(targetById(b.id).n) + ' ×' + b.qty).join(', ') + '</div><div class="tctl">' + chips('show', [['x', 'Взрывчатка', 'Explosives'], ['m', 'Инструменты', 'Tools'], ['e', 'Техника и экзотика', 'Vehicle and special'], ['a', 'Всё', 'All']]) + chips('sort', [['sulfur', 'По сере', 'By sulfur'], ['time', 'По времени', 'By time'], ['n', 'По количеству', 'By count']]) + '</div></div>';
+    const head = '<div class="trep"><div class="tnote" style="margin:0">' + T('Целей', 'Targets') + ': <b>' + total + '</b> · ' + S.base.map((b) => esc(targetById(b.id).n) + ' ×' + b.qty).join(', ') + '</div><div class="tctl">' + chips('show', [['x', 'Взрывчатка', 'Explosives'], ['m', 'Инструменты', 'Tools'], ['e', 'Техника и экзотика', 'Vehicle and special'], ['a', 'Всё', 'All']]) + chips('sort', [['sulfur', 'По сере', 'By sulfur'], ['time', 'По времени', 'By time'], ['n', 'По количеству', 'By count']]) + chips('view', [['table', '☰ Таблица', '☰ Table'], ['cards', '▦ Карточки', '▦ Cards']]) + '</div></div>';
     if (!rows.length) return head + '<div class="tnote bad">' + T('Ничего из этого списка не пробивает выбранные цели.', 'Nothing in this list can break the chosen targets.') + '</div>';
+    
+    if (S.view === 'cards') {
+      const maxS = Math.max(1, ...rows.map((r) => (Number.isFinite(r.sulfur) ? r.sulfur : 0))), maxT = Math.max(1, ...rows.map((r) => r.time));
+      return head + '<div class="rcards">' + rows.map((r) => {
+        const name = nm(r.w.kind === 'x' ? WEAP : TOOL, r.w.id), best = cheap && r === cheap, share = r.w.kind === 'x' && Number.isFinite(r.sulfur) && r.sulfur ? (r.sulfur / maxS) * 100 : (r.time / maxT) * 100;
+        return '<div class="rcard' + (best ? ' best' : '') + '"><div class="rtop">' + icon(r.w.id) + '<b>' + esc(name) + '</b>' + (best ? '<span class="ub new">' + T('эко', 'eco') + '</span>' : '') + '</div><div class="rbig">' + num(r.n) + '<small>' + (r.w.kind === 'x' ? T('шт.', 'pcs') : T('ударов', 'hits')) + '</small></div><div class="rbar"><i style="width:' + Math.max(4, share) + '%"></i></div><div class="rmeta"><span>⏱ <b>' + fmtTimeRows(r) + '</b></span><span>' + (r.w.kind === 'x' ? (r.craft ? '<b>' + num(r.sulfur) + '</b> ' + T('серы', 'sulfur') : T('не крафтится', 'not craftable')) : '<b>' + num(r.tools) + '</b> ' + T('инстр.', 'tools')) + '</span></div>' + (r.craft ? rawHtml(r.raw) : '') + '</div>';
+      }).join('') + '</div><p class="mut tfoot">' + T('Полоска показывает цену по сере относительно самого дорогого способа.', 'The bar shows the sulfur price relative to the most expensive way.') + '</p>';
+    }
     return head + '<div class="tgrid4">' + (cheap ? '<div class="tc best"><b>' + esc(nm(WEAP, cheap.w.id)) + '</b><small>' + T('дешевле всего по сере: ', 'cheapest in sulfur: ') + num(cheap.sulfur) + '</small></div>' : '') + (fast ? '<div class="tc"><b>' + esc(nm(fast.w.kind === 'x' ? WEAP : TOOL, fast.w.id)) + '</b><small>' + T('быстрее всего: ', 'fastest: ') + fmtTimeRows(fast) + '</small></div>' : '') + '</div><div class="ttab">' + rows.map((r) => {
       const name = nm(r.w.kind === 'x' ? WEAP : TOOL, r.w.id);
       const best = cheap && r === cheap;
@@ -284,30 +292,6 @@
     return '<div class="tgrid4"><div class="tc"><b>' + num(perH) + '</b><small>' + esc(nm(RES, S.res)) + ' ' + T('в час', 'per hour') + '</small></div><div class="tc"><b>' + num(perH * h) + '</b><small>' + T('за', 'in') + ' ' + h + ' ' + T('ч', 'h') + '</small></div><div class="tc"><b>' + (fuelH * h).toFixed(1) + '</b><small>' + T('топлива за это время', 'fuel for that time') + '</small></div><div class="tc"><b>' + (perH / Math.max(0.01, fuelH)).toFixed(0) + '</b><small>' + T('ресурса с 1 ед. топлива', 'resource per fuel unit') + '</small></div></div><p class="mut tfoot">' + T('Расчёт по настройкам игры (работа ' + q.workToAdd + ' раз в ' + q.processRate + ' с, ресурс «стоит» ' + w.w + ' работы). Реальный выход зависит от залежи.', 'Calculated from the game settings (' + q.workToAdd + ' work every ' + q.processRate + ' s, the resource costs ' + w.w + ' work). The real yield depends on the deposit.') + '</p>';
   }
 
-  /* plant genes: per slot the genes of the plants around are summed with their weights, the heaviest gene wins */
-  const GW = { X: 1, W: 1, G: 0.6, Y: 0.6, H: 0.6 };
-  function genesForm() {
-    return '<div class="tform"><p class="mut" style="margin:0 0 6px">' + T('Впиши гены соседних растений (до 8 штук, по 6 букв: G, Y, H, W, X). Зелёные гены G, Y, H полезные, красные W и X вредные.', 'Type the genes of the plants around (up to 8, six letters each: G, Y, H, W, X). Green G, Y, H are good, red W and X are bad.') + '</p><div class="gin">' + S.genes.map((g, i) => '<input class="gi" maxlength="6" placeholder="GYGHYG" data-tg="' + i + '" value="' + esc(g) + '">').join('') + '</div></div><div id="tlRes"></div>';
-  }
-  function genesRes() {
-    const list = S.genes.map((g) => g.toUpperCase().replace(/[^GYHWX]/g, '')).filter((g) => g.length === 6);
-    if (list.length < 2) return '<div class="tnote">' + T('Нужно хотя бы два растения с шестью генами.', 'At least two plants with six genes are needed.') + '</div>';
-    let result = '', ties = false;
-    const slots = [];
-    for (let i = 0; i < 6; i++) {
-      const sum = {};
-      list.forEach((g) => (sum[g[i]] = (sum[g[i]] || 0) + GW[g[i]]));
-      const max = Math.max(...Object.values(sum)), win = Object.keys(sum).filter((k) => sum[k] === max);
-      if (win.length > 1) ties = true;
-      result += win.length > 1 ? '?' : win[0];
-      slots.push({ sum, win });
-    }
-    const col = (c) => '<b class="g' + (/[GYH]/.test(c) ? 'p' : c === '?' ? 'q' : 'n') + '">' + c + '</b>';
-    const good = [...result].filter((c) => /[GYH]/.test(c)).length;
-    return '<div class="tnote">' + T('Получится', 'Result') + ': <span class="gres">' + [...result].map(col).join('') + '</span> · ' + T('полезных генов', 'good genes') + ': <b>' + good + '/6</b>' + (ties ? ' · ' + T('«?» значит равенство весов, итог зависит от игры', '"?" means equal weights, the game decides') : '') + '</div><div class="ttab">' + slots.map((s, i) => '<div class="trow"><div class="tn"><b>' + T('Ячейка', 'Slot') + ' ' + (i + 1) + '</b></div><div class="tx">' + Object.entries(s.sum).sort((a, b) => b[1] - a[1]).map(([k, v]) => col(k) + ' ' + v.toFixed(1)).join(' · ') + '</div><div class="tx"><b>' + s.win.join('/') + '</b></div></div>').join('') + '</div><p class="mut tfoot">' + T('Вес гена: G, Y, H = 0.6, W и X = 1 (из настроек игры). Побеждает ген с наибольшей суммой среди растений вокруг.', 'Gene weight: G, Y, H = 0.6, W and X = 1 (from the game). The gene with the biggest sum around wins.') + '</p>';
-  }
-
-
   /* break the wall: click to hit, the wall loses health and falls apart brick by brick */
   const SM = { hp: 0, max: 0, hits: 0, dealt: 0, time: 0, auto: null, order: null, key: '' };
   const BRICKS = 40;
@@ -381,7 +365,7 @@
   /* ---------- screen ---------- */
   const PANEL = {
     smash: [smashForm, () => ''], raid: [raidForm, raidRes], eco: [raidForm, ecoRes], wall: [wallForm, wallRes], decay: [decayForm, decayRes],
-    codes: [codesForm, codesRes], mine: [mineForm, mineRes], genes: [genesForm, genesRes],
+    codes: [codesForm, codesRes], mine: [mineForm, mineRes],
   };
   const INTRO = {
     smash: ['Выбери стену и чем её бить, жми на стену и смотри, сколько она держится и что на это уйдёт.', 'Pick a wall and what to hit it with, click the wall and see how long it holds and what it costs.'],
@@ -391,7 +375,6 @@
     decay: ['Через сколько часов постройка сгниёт без шкафа.', 'How many hours until a building decays without a cupboard.'],
     codes: ['Список кодовых замков без повторов: пробуй пачками и отмечай.', 'A list of lock codes without repeats: try them in batches and mark them.'],
     mine: ['Сколько выкопает карьер, насос или экскаватор и сколько топлива уйдёт.', 'What a quarry, pump jack or excavator digs and how much fuel it burns.'],
-    genes: ['Какие гены получатся при скрещивании растений рядом.', 'Which genes crossbreeding the plants around gives.'],
   };
 
   function draw() {
@@ -428,6 +411,7 @@
     if (e.target.closest('[data-tlink]')) { const url = location.href.split('#')[0] + '#tools?b=' + encodeURIComponent(S.base.map((x) => x.id + '*' + x.qty + '*' + x.hp).join(',')); try { navigator.clipboard.writeText(url); } catch (err) { /* no clipboard */ } const m = document.getElementById('tlMsg'); if (m) m.textContent = T('Ссылка скопирована', 'Link copied'); return; }
     if ((b = e.target.closest('[data-tshow]'))) { S.show = b.dataset.tshow; results(); return; }
     if ((b = e.target.closest('[data-tsort]'))) { S.sort = b.dataset.tsort; results(); return; }
+    if ((b = e.target.closest('[data-tview]'))) { S.view = b.dataset.tview; results(); return; }
     if (e.target.closest('[data-smhit]') || e.target.closest('#smWall')) { smHit(); return; }
     if (e.target.closest('[data-smauto]')) { smToggleAuto(); return; }
     if (e.target.closest('[data-smreset]')) { smReset(); smPaint(false); const a = document.getElementById('smAuto'); if (a) a.classList.remove('on'); return; }
@@ -451,8 +435,7 @@
     }
     const bf = e.target.closest('[data-tb]');
     if (bf) { const [i, k] = bf.dataset.tb.split(':'), x = S.base[+i]; if (x) { x[k] = Math.max(k === 'qty' ? 1 : 0, Math.min(k === 'qty' ? 999 : 100000, Math.round(+bf.value || 0))); saveBase(); results(); } return; }
-    const g = e.target.closest('[data-tg]');
-    if (g) { S.genes[+g.dataset.tg] = g.value; results(); }
+    return;
   }
   document.addEventListener('input', onField);
   document.addEventListener('change', onField);

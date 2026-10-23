@@ -263,6 +263,37 @@ iframe.ayt{border:0}
 .trep{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}.tctl{display:flex;flex-wrap:wrap;gap:12px}
 .tc.best{border-color:var(--lime);background:linear-gradient(110deg,rgba(212,232,90,.14),var(--panel2) 60%)}.tc.best b{font-size:22px}
 .tsul{margin-bottom:6px}.tsul b{color:var(--lime);font-size:18px}
+/* genetics */
+.gl{display:inline-flex;align-items:center;justify-content:center;width:26px;height:30px;margin:1px;border-radius:7px;background:#12140d;border:1px solid #3a4030;font:800 15px ui-monospace,Consolas,monospace}
+.gG{color:#6DDB5A;border-color:#3f7a35}.gY{color:#F6DE3C;border-color:#8a7a1a}.gH{color:#4DA3FF;border-color:#2c5f99}.gW{color:#FF6B6B;border-color:#8a3a3a}.gX{color:#9aa08a}.gl.hit{background:#1d2a10;box-shadow:0 0 0 1px var(--lime)}
+.ggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:430px}
+.gcell{min-height:68px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);display:flex;flex-wrap:wrap;gap:2px;align-items:center;justify-content:center;padding:6px;text-align:center}
+.gcell small{width:100%;color:var(--mute);font-size:11px}.gc{border-color:var(--lime);background:linear-gradient(160deg,rgba(212,232,90,.16),var(--panel2))}
+.ginput .gi{height:68px;font-size:15px;letter-spacing:2px;padding:0 4px}.gi.bad{border-color:#ff6b6b}
+.gx{display:grid;grid-template-columns:minmax(260px,430px) minmax(0,1fr);gap:22px;align-items:start}
+.gcrops{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px;margin:14px 0}
+.gcrop{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;font:600 12.5px var(--f-ui);text-align:left}.gcrop .ce{font-style:normal;font-size:24px;line-height:1}.gcrop:hover,.gcrop.on{border-color:var(--lime)}.gcrop.on{background:linear-gradient(110deg,rgba(212,232,90,.16),var(--panel2))}
+.gchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.gchip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:10px;background:var(--panel3);border:1px solid var(--line)}.gchip i{font-style:normal;color:var(--mute);font-size:12px}.gchip button{width:22px;height:22px;border-radius:50%;border:0;background:#3a2020;color:#ff9b9b;cursor:pointer;line-height:1}
+.gpre{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.gp{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;text-align:left;font:inherit}.gp:hover,.gp.on{border-color:var(--lime)}.gp small{color:var(--mute);font-size:12px}
+.gsteps{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}.gstep{padding:16px;display:flex;flex-direction:column;gap:8px}.gstep h4{margin:0;color:var(--lime)}.gstep p{margin:0}
+.ghow{margin-top:26px;padding:18px 20px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}.ghow h4{margin:0 0 8px}
+.gkey{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px}.gkey small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.ged{display:grid;gap:8px}.grow{display:grid;grid-template-columns:minmax(0,1fr) auto 38px;gap:10px;align-items:center;padding:8px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line)}.grow small{display:block;color:var(--mute);font-size:11.5px}
+.gpair{display:flex;gap:6px}.al,.gshow{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel3);font:800 17px var(--f-ui);display:inline-flex;align-items:center;justify-content:center}.al{cursor:pointer}.al:hover{transform:translateY(-1px)}
+.aG{color:var(--lime)}.aO{color:#aab09a}.aB{color:#ff6b6b}.al.aG,.gshow.aG{border-color:var(--lime);background:rgba(212,232,90,.12)}.al.aB,.gshow.aB{border-color:#8a3a3a;background:rgba(255,107,107,.1)}
+.gparents,.gpairform{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:16px}
+.gb{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#222;margin-bottom:4px}.gb i.aG{background:var(--lime)}.gb i.aO{background:#7d836f}.gb i.aB{background:#ff6b6b}
+.gh{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:6px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)}.gh b{flex:1}.gcode{font:700 14px ui-monospace,Consolas,monospace;color:var(--mute)}
+.gspec{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.gcr .tn{gap:12px}
+/* raid cards */
+.rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.rcard{padding:18px;border-radius:16px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}.rcard.best{border-color:var(--lime);background:linear-gradient(160deg,rgba(212,232,90,.14),var(--panel2) 60%)}
+.rtop{display:flex;align-items:center;gap:12px}.rtop img{width:56px;height:56px;object-fit:contain}.rtop b{font-size:17px}
+.rbig{font:800 38px var(--f-ui);color:var(--lime);line-height:1}.rbig small{font:500 13px var(--f-ui);color:var(--mute);margin-left:8px}
+.rbar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.rbar i{display:block;height:100%;background:linear-gradient(90deg,var(--lime),var(--orange))}
+.rmeta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mute)}.rmeta b{color:var(--fg)}
+@media(max-width:900px){.gx,.gparents,.gpairform{grid-template-columns:1fr}.ggrid{margin:0 auto}}
 .wkh{display:flex;gap:14px;align-items:center;margin-bottom:10px}.wkh img{width:72px;height:72px;object-fit:contain}
 .wkr{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}.wkx{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;color:var(--fg);cursor:pointer;font:500 13px var(--f-ui)}.wkx img{width:28px;height:28px;object-fit:contain}.wkx b{color:var(--lime)}
 .rules h3{text-align:center;font-size:19px;margin-bottom:16px}
@@ -516,7 +547,7 @@ const DEFAULT=()=>({
  name:'Lima Rust',region:'EU',rates:'2x',type:'VANILLA+',ip:'lima.rust:28015',mapSize:3500,
  discord:'discord.gg/fVWnrjjS5u',telegram:'t.me/LimaRust',steam:'steamcommunity.com/groups/LimaRust',pay:'',admins:[{id:'76561198000000001',nick:'Демо-админ'}],players:[{id:'76561198000000002',nick:'Демо-VIP',priv:'VIP',hours:95}],
  promo:{on:true,text:'Донат x2 до воскресенья: двойные лаймы на любое пополнение'},
- show:{news:true,updates:true,wiki:true,tools:true,wishes:true,why:true,ranks:true,map:true,kits:true,wipe:true,blocks:true,rules:true,top:true,donate:true,faq:true},
+ show:{news:true,updates:true,wiki:true,tools:true,genetics:true,wishes:true,why:true,ranks:true,map:true,kits:true,wipe:true,blocks:true,rules:true,top:true,donate:true,faq:true},
  wipe:{freq:'weekly',hour:19,thu:true,dev:true,devUntil:'2027-01-25'},
  curMap:{name:'Лимонный остров',seed:777,size:3500,dev:true},
  maps:[{name:'Солнечный берег',seed:2026,size:3500,votes:41},{name:'Кислые холмы',seed:4242,size:3800,votes:27},{name:'Цитрусовый архипелаг',seed:9001,size:3000,votes:18}],
@@ -681,6 +712,7 @@ tiles(){const L=LIVE.rustUpd||[],u=L[0];
  const nw=u&&C.show.updates?'<a class="tl wide" href="#updates"><span class="ub new">НОВОЕ В RUST</span><b>'+esc(u.title)+'</b><small>'+new Date(u.date*1000).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long',year:'numeric'})+' · все обновления с 2023 года</small></a>':'';
  return '<section id="tiles"><div class="wrap">'+ttl('Куда пойдём?')+'<div class="tgrid">'+nw+T.map(([k,n,d])=>'<a class="tl" href="#'+k+'"><b>'+n+'</b><small>'+d+'</small></a>').join('')+'</div></div></section>'},
 tools(){return typeof toolsHtml==='function'?toolsHtml():'<section id="tools"><div class="wrap">'+ttl('Рейды и калькуляторы')+'<p class="mut" style="text-align:center">Загрузка…</p></div></section>'},
+genetics(){return typeof geneticsHtml==='function'?geneticsHtml():'<section id="genetics"><div class="wrap">'+ttl('Генетика')+'<p class="mut" style="text-align:center">Загрузка…</p></div></section>'},
 wishes(){return typeof wishesHtml==='function'?wishesHtml():'<section id="wishes"><div class="wrap">'+ttl('Пожелания')+'<p class="mut" style="text-align:center">Загрузка…</p></div></section>'},
 updates(){const ar=artRef();if(ar)return `<section id="updates"><div class="wrap"><a class="btn" href="#updates">← Все обновления</a><article class="art" id="artBox"><p class="mut">Загрузка статьи…</p></article></div></section>`;
  return `<section id="updates"><div class="wrap">${ttl('Обновления Rust')}<p class="note" style="margin:-14px 0 24px">Все большие обновления игры с 2023 года из официальных объявлений Facepunch. Новое появляется само.</p><div id="updBox">${updHtml()}</div></div></section>`},
@@ -689,11 +721,11 @@ faq(){return `<section id="faq"><div class="wrap">${ttl('Вопросы')}<div c
 discord(){return `<section id="discord"><div class="wrap">${ttl('Сообщество')}<div class="grid two"><div class="card dis"><span style="color:var(--green)">${SVG.dc.replace('width="20" height="20"','width="48" height="48"')}</span><div class="big">${esc(C.discord)}</div><p class="mut" style="margin:0">Новости вайпов, промокоды, поддержка и поиск команды.</p><a class="btn pri" href="https://${esc(C.discord)}" target="_blank" rel="noopener">Открыть Discord</a></div><div class="card dis"><span style="color:var(--orange)">${SVG.tg.replace('width="20" height="20"','width="48" height="48"')}</span><div class="big" style="color:var(--orange)">${esc(C.telegram)}</div><p class="mut" style="margin:0">Анонсы вайпов и акций прямо в Telegram.</p><a class="btn org" href="https://${esc(C.telegram)}" target="_blank" rel="noopener">Открыть Telegram</a></div></div></div></section>`}
 };
 const ORDER=['home','news','updates','cabinet','why','ranks','map','kits','wipe','blocks','rules','top','donate','faq','discord'];
-const NAV=[['home','Главная'],['news','Новости'],['updates','Обновления'],['wiki','Вики'],['tools','Рейды'],['kits','Киты'],['blocks','Блоки'],['wishes','Пожелания'],['cabinet','Кабинет']];
+const NAV=[['home','Главная'],['news','Новости'],['updates','Обновления'],['wiki','Вики'],['tools','Рейды'],['genetics','Генетика'],['kits','Киты'],['blocks','Блоки'],['wishes','Пожелания'],['cabinet','Кабинет']];
 const LT=(ru,en)=>LANG==='en'?en:ru;
 const RSUB=[['Только пришёл на остров','Just arrived on the island'],['Уже освоился','Getting the hang of it'],['Знает, где что лежит','Knows where everything is'],['Свой на сервере','One of us'],['Постоянный игрок','Regular player'],['Старожил острова','Island old-timer'],['Живёт на сервере','Lives on the server'],['Ветеран вайпов','Veteran of many wipes'],['Легенда сервера','Server legend'],['Высшее звание','The highest rank']];
 const RV={t:0,q:''};
-const PAGES=['news','updates','wiki','tools','wishes','cabinet','kits','blocks'];
+const PAGES=['news','updates','wiki','tools','genetics','wishes','cabinet','kits','blocks'];
 const HOME_SECTIONS=['home','tiles','why','ranks','donate','wipe','map','rules','top','faq','discord'];
 const artRef=()=>{const m=location.hash.slice(1).match(/^updates\/(\d+)\.(\d+)/);return m?{id:m[1],d:+m[2]}:null};
 const curPage=()=>{const h=location.hash.slice(1).split(/[\/?]/)[0];if(!PAGES.includes(h))return '';if(h==='cabinet')return ACC?h:'';return C.show[h]?h:''};
@@ -959,5 +991,6 @@ $('#logo-s').innerHTML=LEMON(34);
 </script>
 <script src="tools.js" defer onload="renderSite()"></script>
 <script src="wishes.js" defer onload="renderSite()"></script>
+<script src="genetics.js" defer onload="renderSite()"></script>
 </body>
 </html>

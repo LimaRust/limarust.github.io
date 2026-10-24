@@ -6,7 +6,7 @@
   const D = { raid: null, animals: null, failed: false, loading: false };
   const blank = () => ({ sp: 'cow', sex: 'F', name: '', g: [[1, 1], [1, 1], [1, 1], [1, 1], [1, 1]], m: [0, 1] });
   const G = {
-    tab: 'plants', pmode: 'plan', amode: 'one', crop: 'red_berry', target: 'GGGYYY', custom: '', inv: {}, neigh: ['', '', '', '', '', '', '', ''], own: '', layout: 'large',
+    tab: 'plants', pmode: 'plan', amode: 'herd', sel: -1, editIdx: -1, nameq: '', dynq: '', nameLoc: 'en', pplay: {}, plan: { sp: 'cow', k: 3, genes: [true, true, true, true, true] }, crop: 'red_berry', target: 'GGGYYY', custom: '', inv: {}, neigh: ['', '', '', '', '', '', '', ''], own: '', layout: 'large',
     one: blank(), mother: Object.assign(blank(), { sex: 'F', m: [3, 5] }), father: Object.assign(blank(), { sex: 'M', m: [8, 9] }), herd: [], draft: blank(), goal: 'all',
   };
   try { G.inv = JSON.parse(localStorage.getItem('lima.gene.inv') || '{}'); G.herd = JSON.parse(localStorage.getItem('lima.gene.herd2') || '[]'); } catch (e) { G.inv = {}; G.herd = []; }
@@ -455,22 +455,31 @@
   const introHtml2 = () => '<p class="mut">' + T('Растение растёт тем быстрее, чем лучше условия. Подвигай ползунки и посмотри, что тормозит рост твоей грядки.', 'The better the conditions, the faster the plant grows. Move the sliders and see what slows your planter down.') + '</p>';
 
   /* ---------- screen scanner: reads the six gene letters of a plant from the screen of the game ---------- */
-  const SC = { open: false, stream: null, stop: null, region: null, busy: false, last: '', stable: 0, added: '', miss: 0, auto: true, dest: 'inv', ocr: null, msg: '', full: null, colors: {}, reading: null, drag: null };
-  try { SC.region = JSON.parse(localStorage.getItem('lima.gene.scanrect') || 'null'); SC.colors = JSON.parse(localStorage.getItem('lima.gene.scancolors') || '{}'); } catch (e) { SC.region = null; }
+  const SC = { kind: 'plant', markers: true, regions: {}, open: false, stream: null, stop: null, region: null, busy: false, last: '', stable: 0, added: '', miss: 0, auto: true, dest: 'inv', ocr: null, msg: '', full: null, colors: {}, reading: null, drag: null };
+  try { SC.regions.plant = JSON.parse(localStorage.getItem('lima.gene.scanrect') || 'null'); SC.regions.animal = JSON.parse(localStorage.getItem('lima.gene.scanrect.animal') || 'null'); SC.region = SC.regions.plant; SC.colors = JSON.parse(localStorage.getItem('lima.gene.scancolors') || '{}'); } catch (e) { SC.region = null; }
   const scEl = (id) => document.getElementById(id);
+  function loadTess() {
+    if (window.Tesseract) return Promise.resolve();
+    if (!SC.tess) {
+      SC.tess = new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+        s.onload = res; s.onerror = () => rej(new Error('load'));
+        document.head.appendChild(s);
+      });
+      SC.tess.catch(() => { SC.tess = null; });
+    }
+    return SC.tess;
+  }
   function loadOcr() {
-    if (SC.ocr) return SC.ocr;
-    SC.ocr = new Promise((res, rej) => {
-      const go = async () => { try { const w = await window.Tesseract.createWorker('eng'); await w.setParameters({ tessedit_char_whitelist: 'GYHWX', tessedit_pageseg_mode: '10' }); res(w); } catch (e) { rej(e); } };
-      if (window.Tesseract) { go(); return; }
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
-      s.onload = go; s.onerror = () => rej(new Error('load'));
-      document.head.appendChild(s);
-    });
-    SC.ocr.catch(() => { SC.ocr = null; });
+    if (!SC.ocr) { SC.ocr = loadTess().then(async () => { const w = await window.Tesseract.createWorker('eng'); await w.setParameters({ tessedit_char_whitelist: 'GYHWX', tessedit_pageseg_mode: '10' }); return w; }); SC.ocr.catch(() => { SC.ocr = null; }); }
     return SC.ocr;
   }
+  function loadOcrDigits() {
+    if (!SC.ocrD) { SC.ocrD = loadTess().then(async () => { const w = await window.Tesseract.createWorker('eng'); await w.setParameters({ tessedit_char_whitelist: '0123456789', tessedit_pageseg_mode: '7' }); return w; }); SC.ocrD.catch(() => { SC.ocrD = null; }); }
+    return SC.ocrD;
+  }
+  const warm = () => (SC.kind === 'animal' ? loadOcrDigits() : loadOcr());
   const otsu = (gray) => {
     const h = new Array(256).fill(0);
     gray.forEach((v) => h[v]++);
@@ -516,6 +525,74 @@
     ox.drawImage(g, 30, 30, W, H);
     return { canvas: out, color };
   }
+
+  // Colour of a circle of the genetics panel: grey = ok, red = bad, green = good. The big colour is the shown copy, a small dot of another colour is the carried copy.
+  function classOf(r, g, b) {
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), v = mx / 255, s = mx ? (mx - mn) / mx : 0;
+    if (v < 0.25) return -1;
+    if (s < 0.22) return v > 0.88 ? -1 : 1;
+    const d = mx - mn;
+    let h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    h *= 60;
+    if (h >= 75 && h <= 175) return 2;
+    if (h <= 28 || h >= 335) return 0;
+    return -1;
+  }
+  function readDisc(src, x, y, w, h) {
+    const S = 48, c = document.createElement('canvas');
+    c.width = S; c.height = S;
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    cx.drawImage(src, x + w * 0.1, y + h * 0.1, w * 0.8, h * 0.8, 0, 0, S, S);
+    const px = cx.getImageData(0, 0, S, S).data, n = [0, 0, 0];
+    for (let i = 0; i < S * S; i++) { const k = classOf(px[i * 4], px[i * 4 + 1], px[i * 4 + 2]); if (k >= 0) n[k]++; }
+    const total = n[0] + n[1] + n[2];
+    if (total < 40) return { ok: false, hi: 1, lo: 1 };
+    const share = n.map((q) => q / total);
+    let hi = -1;
+    for (let k = 2; k >= 0; k--) if (share[k] >= 0.1) { hi = k; break; }
+    if (hi < 0) hi = share.indexOf(Math.max(...share));
+    let lo = hi;
+    for (let k = 0; k < 3; k++) if (k !== hi && share[k] >= 0.025 && k < hi && (lo === hi || share[k] > share[lo])) lo = k;
+    return { ok: true, hi, lo };
+  }
+  async function readAnimal(src, r) {
+    const cells = SC.markers ? 7 : 5, cw = r.w / cells, g = [], notes = [];
+    for (let i = 0; i < 5; i++) { const d = readDisc(src, r.x + i * cw, r.y, cw, r.h); if (!d.ok) notes.push(i); g.push([d.hi, d.lo]); }
+    let m = null;
+    if (SC.markers) {
+      m = [];
+      try {
+        const worker = await loadOcrDigits();
+        for (let i = 5; i < 7; i++) {
+          let val = null;
+          for (const inset of [0.1, 0.2, 0.04]) {
+            const q = prepCell(src, r.x + i * cw, r.y, cw, r.h, inset);
+            if (!q.canvas) continue;
+            const { data } = await worker.recognize(q.canvas), digits = String(data.text).replace(/\D/g, '');
+            if (digits && data.confidence >= 40 && +digits <= D.animals.markers - 1) { val = +digits; break; }
+          }
+          m.push(val);
+        }
+      } catch (e) { m = [null, null]; }
+    }
+    return { g, m, bad: notes };
+  }
+  const animalKey = (a) => JSON.stringify(a.g) + '|' + JSON.stringify(a.m);
+  function addScannedAnimal(a) {
+    if (!document.getElementById('genetics')) return;
+    const d = G.draft;
+    G.tab = 'animals'; G.amode = 'herd';
+    G.draft = { sp: d.sp, sex: d.sex, name: d.name, g: a.g.map((p) => p.slice()), m: [a.m && a.m[0] != null ? a.m[0] : d.m[0], a.m && a.m[1] != null ? a.m[1] : d.m[1]] };
+    if (SC.auto) { G.herd.push({ sp: d.sp, sex: d.sex, name: d.name.trim().slice(0, 24), g: G.draft.g.map((p) => p.slice()), m: G.draft.m.slice() }); G.draft.name = ''; save(); SC.msg = '✓ ' + T('зверь добавлен в стадо', 'the animal is added to the herd'); }
+    else SC.msg = '✓ ' + T('гены заполнены в форме, проверь и нажми «Добавить в стадо»', 'the genes are filled in the form, check them and press "Add to herd"');
+    const keep = window.scrollY; draw(); window.scrollTo(0, keep);
+    const m = scEl('gnScanMsg'); if (m) m.textContent = SC.msg;
+  }
+  function animalReadoutHtml(rd) {
+    if (!rd) return '<span class="mut">' + T('Здесь появятся прочитанные круги', 'The circles read will show here') + '</span>';
+    const an = { sp: 'cow', sex: 'F', name: '', g: rd.g, m: [rd.m && rd.m[0] != null ? rd.m[0] : 0, rd.m && rd.m[1] != null ? rd.m[1] : 0] };
+    return '<span class="apd">' + [0, 1, 2, 3, 4].map((k) => disc(an, k)).join('') + (rd.m ? (rd.m[0] != null ? mdisc(rd.m[0]) : '<span class="ad mk unk"><b>?</b></span>') + (rd.m[1] != null ? mdisc(rd.m[1]) : '<span class="ad mk unk"><b>?</b></span>') : '') + '</span>';
+  }
   const colDist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
   async function readCells(src, r) {
     const worker = await loadOcr(), cw = r.w / 6, out = [];
@@ -550,14 +627,14 @@
     const p = scanPanel();
     p.style.display = SC.open ? 'block' : 'none';
     if (!SC.open) return;
-    const rd = SC.reading, code = rd ? rd.map((c) => c.letter || '?').join('') : '';
+    const an = SC.kind === 'animal', rd = SC.reading, code = !an && rd ? rd.map((c) => c.letter || '?').join('') : '';
     p.innerHTML = '<div class="gsh"><b>📷 ' + T('Сканер экрана', 'Screen scanner') + '</b><button data-gnscanclose aria-label="close">✕</button></div>'
-      + '<p class="mut gsp">' + T('1. Нажми «Показать экран» и выбери окно игры. 2. Наведи в игре на растение, чтобы появились 6 значков генов. 3. Обведи мышью ряд из 6 значков на картинке ниже (один раз). Дальше сканер читает сам и добавляет клоны.', '1. Press "Share screen" and pick the game window. 2. Aim at a plant in the game so the 6 gene icons show. 3. Drag a frame around the row of 6 icons below (once). Then the scanner reads and adds clones by itself.') + '</p>'
+      + '<p class="mut gsp">' + (an ? T('1. Нажми «Показать экран» и выбери окно игры. 2. Наведи на животное, чтобы открылась панель «Генетика». 3. Обведи мышью ряд из пяти кругов и двух чисел (один раз). Сканер сам читает цвета и числа. Серый круг это обычный ген, красный плохой, зелёный хороший.', '1. Press "Share screen" and pick the game window. 2. Look at an animal so the Genetics panel opens. 3. Drag a frame around the row of five circles and two numbers (once). The scanner reads the colours and the numbers. Grey is an ok gene, red bad, green good.') : T('1. Нажми «Показать экран» и выбери окно игры. 2. Наведи в игре на растение, чтобы появились 6 значков генов. 3. Обведи мышью ряд из 6 значков на картинке ниже (один раз). Дальше сканер читает сам и добавляет клоны.', '1. Press "Share screen" and pick the game window. 2. Aim at a plant in the game so the 6 gene icons show. 3. Drag a frame around the row of 6 icons below (once). Then the scanner reads and adds clones by itself.')) + '</p>'
       + '<div class="gsbar"><button class="btn pri" data-gnscanshare>' + (SC.stream ? '⟳ ' + T('Другой экран', 'Another screen') : '🖥 ' + T('Показать экран', 'Share screen')) + '</button><label class="btn">🖼 ' + T('Скриншот', 'Screenshot') + '<input type="file" accept="image/*" data-gnscanfile hidden></label>' + (SC.stream ? '<button class="btn" data-gnscanstop>⏹ ' + T('Стоп', 'Stop') + '</button>' : '') + '</div>'
       + '<div class="gscw"><canvas id="gnScanCv" width="320" height="180"></canvas></div>'
-      + '<div class="gsread">' + (rd ? rd.map((c) => '<b class="gl g' + (c.letter || 'X') + (c.letter ? '' : ' unk') + '" title="' + Math.round(c.conf) + '%">' + (c.letter || '?') + '</b>').join('') : '<span class="mut">' + T('Здесь появятся прочитанные буквы', 'Read letters will show here') + '</span>') + '</div>'
-      + '<div class="gsbar"><input class="gi" id="gnScanFix" maxlength="6" placeholder="GGYYXX" value="' + esc(valid(code) ? code : '') + '"><button class="btn pri" data-gnscanadd>' + T('Добавить', 'Add') + '</button></div>'
-      + '<div class="gsbar"><label class="mut"><input type="checkbox" data-gnscanauto ' + (SC.auto ? 'checked' : '') + '> ' + T('Добавлять сам', 'Add by itself') + '</label><select data-gnscandest class="gi"><option value="inv"' + (SC.dest === 'inv' ? ' selected' : '') + '>' + T('в мои клоны', 'to my clones') + '</option><option value="nb"' + (SC.dest === 'nb' ? ' selected' : '') + '>' + T('в соседи (вкладка «Что получится»)', 'to neighbours (tab "What you get")') + '</option><option value="own"' + (SC.dest === 'own' ? ' selected' : '') + '>' + T('в центральное растение', 'to the middle plant') + '</option></select></div>'
+      + '<div class="gsread' + (an ? ' an' : '') + '">' + (an ? animalReadoutHtml(rd) : rd ? rd.map((c) => '<b class="gl g' + (c.letter || 'X') + (c.letter ? '' : ' unk') + '" title="' + Math.round(c.conf) + '%">' + (c.letter || '?') + '</b>').join('') : '<span class="mut">' + T('Здесь появятся прочитанные буквы', 'Read letters will show here') + '</span>') + '</div>'
+      + (an ? '<div class="gsbar"><label class="mut"><input type="checkbox" data-gnscanmk ' + (SC.markers ? 'checked' : '') + '> ' + T('в рамке есть два числа (маркеры)', 'the frame has two numbers (markers)') + '</label></div>' : '<div class="gsbar"><input class="gi" id="gnScanFix" maxlength="6" placeholder="GGYYXX" value="' + esc(valid(code) ? code : '') + '"><button class="btn pri" data-gnscanadd>' + T('Добавить', 'Add') + '</button></div>')
+      + '<div class="gsbar"><label class="mut"><input type="checkbox" data-gnscanauto ' + (SC.auto ? 'checked' : '') + '> ' + (an ? T('Сразу добавлять в стадо', 'Add to the herd at once') : T('Добавлять сам', 'Add by itself')) + '</label>' + (an ? '' : '<select data-gnscandest class="gi"><option value="inv"' + (SC.dest === 'inv' ? ' selected' : '') + '>' + T('в мои клоны', 'to my clones') + '</option><option value="nb"' + (SC.dest === 'nb' ? ' selected' : '') + '>' + T('в соседи (вкладка «Что получится»)', 'to neighbours (tab "What you get")') + '</option><option value="own"' + (SC.dest === 'own' ? ' selected' : '') + '>' + T('в центральное растение', 'to the middle plant') + '</option></select>') + '</div>'
       + '<p class="mut gsp" id="gnScanMsg">' + esc(SC.msg) + '</p>';
     scanPreview();
   }
@@ -573,7 +650,8 @@
       const X = r.x * cv.width, Y = r.y * cv.height, W = r.w * cv.width, H = r.h * cv.height;
       cx.strokeStyle = '#d4e85a'; cx.lineWidth = 2; cx.strokeRect(X, Y, W, H);
       cx.strokeStyle = 'rgba(212,232,90,.6)'; cx.lineWidth = 1;
-      for (let i = 1; i < 6; i++) { cx.beginPath(); cx.moveTo(X + W * i / 6, Y); cx.lineTo(X + W * i / 6, Y + H); cx.stroke(); }
+      const cellsN = SC.kind === 'animal' ? (SC.markers ? 7 : 5) : 6;
+      for (let i = 1; i < cellsN; i++) { cx.beginPath(); cx.moveTo(X + W * i / cellsN, Y); cx.lineTo(X + W * i / cellsN, Y + H); cx.stroke(); }
     }
   }
   function setFull(src) {
@@ -588,6 +666,19 @@
   async function scanOnce() {
     if (SC.busy || !SC.full || !SC.region) return;
     SC.busy = true;
+    if (SC.kind === 'animal') {
+      try {
+        SC.msg = '';
+        const a = await readAnimal(SC.full, absRegion()), key = animalKey(a), ok = a.bad.length < 2;
+        SC.reading = a;
+        if (ok) { SC.miss = 0; if (key === SC.last) SC.stable++; else { SC.last = key; SC.stable = 1; } if (SC.stable >= 2 && key !== SC.added) { SC.added = key; addScannedAnimal(a); } }
+        else { SC.stable = 0; if (++SC.miss >= 2) SC.added = ''; }
+        const box = document.querySelector('#gnScan .gsread');
+        if (box) box.innerHTML = animalReadoutHtml(a);
+      } catch (e) { SC.msg = T('Не получилось прочитать панель.', 'Could not read the panel.'); const m = scEl('gnScanMsg'); if (m) m.textContent = SC.msg; }
+      SC.busy = false;
+      return;
+    }
     try {
       SC.msg = '';
       const cells = await readCells(SC.full, absRegion()), code = cells.map((c) => c.letter || '?').join(''), ok = valid(code) && cells.every((c) => c.conf >= 35);
@@ -629,7 +720,7 @@
       await v.play();
       SC.video = v;
       SC.stream.getVideoTracks()[0].addEventListener('ended', () => scanStop());
-      loadOcr().catch(() => {});
+      warm().catch(() => {});
       SC.stop = startTicker(() => { if (!document.getElementById('genetics')) { scanStop(); SC.open = false; scanDraw(); return; } if (setFull(SC.video)) { scanPreview(); scanOnce(); } }, 700);
       SC.msg = SC.region ? '' : T('Теперь обведи ряд из 6 значков генов.', 'Now drag a frame around the row of 6 gene icons.');
     } catch (e) { SC.msg = T('Доступ к экрану не дан.', 'Screen access was not granted.'); }
@@ -643,7 +734,7 @@
   }
   function scanImage(file) {
     const url = URL.createObjectURL(file), im = new Image();
-    im.onload = () => { scanStop(true); setFull(im); URL.revokeObjectURL(url); SC.msg = SC.region ? '' : T('Обведи ряд из 6 значков генов.', 'Drag a frame around the row of 6 gene icons.'); scanDraw(); loadOcr().then(() => { SC.last = ''; SC.stable = 0; scanOnce(); }).catch(() => {}); };
+    im.onload = () => { scanStop(true); setFull(im); URL.revokeObjectURL(url); SC.msg = SC.region ? '' : T('Обведи ряд из 6 значков генов.', 'Drag a frame around the row of 6 gene icons.'); scanDraw(); warm().then(() => { SC.last = ''; SC.stable = 0; scanOnce(); }).catch(() => {}); };
     im.src = url;
   }
   document.addEventListener('paste', (e) => {
@@ -659,7 +750,7 @@
     if (!SC.drag) return;
     const d = SC.drag;
     SC.drag = null;
-    if (d.w > 0.02 && d.h > 0.01) { SC.region = { x: d.x, y: d.y, w: d.w, h: d.h }; try { localStorage.setItem('lima.gene.scanrect', JSON.stringify(SC.region)); } catch (e) { /* ignore */ } SC.last = ''; SC.stable = 0; SC.added = ''; scanPreview(); loadOcr().then(scanOnce).catch(() => {}); }
+    if (d.w > 0.02 && d.h > 0.01) { SC.region = { x: d.x, y: d.y, w: d.w, h: d.h }; SC.regions[SC.kind] = SC.region; try { localStorage.setItem('lima.gene.scanrect' + (SC.kind === 'animal' ? '.animal' : ''), JSON.stringify(SC.region)); } catch (e) { /* ignore */ } SC.last = ''; SC.stable = 0; SC.added = ''; scanPreview(); warm().then(scanOnce).catch(() => {}); }
     else scanPreview();
   });
 
@@ -734,7 +825,7 @@
   function toggle(who, i, k, v) { return '<button class="al ' + ACLS[v] + '" data-gnal="' + who + ':' + i + ':' + k + '" title="' + T(ALN[v][0], ALN[v][1]) + '">' + ASYM[v] + '</button>'; }
   function editor(who, an, withMeta) {
     const A = D.animals;
-    return (withMeta ? '<div class="tq" style="margin-bottom:10px"><select data-gnsp="' + who + '">' + Object.keys(SPN).map((k) => '<option value="' + k + '"' + (an.sp === k ? ' selected' : '') + '>' + SPN[k][2] + ' ' + T(SPN[k][0], SPN[k][1]) + '</option>').join('') + '</select><select data-gnsex="' + who + '"><option value="F"' + (an.sex === 'F' ? ' selected' : '') + '>♀ ' + T('самка', 'female') + '</option><option value="M"' + (an.sex === 'M' ? ' selected' : '') + '>♂ ' + T('самец', 'male') + '</option></select><input data-gnname="' + who + '" maxlength="20" placeholder="' + T('кличка (по желанию)', 'name (optional)') + '" value="' + esc(an.name) + '"></div>' : '')
+    return (withMeta ? '<div class="tq" style="margin-bottom:10px"><select data-gnsp="' + who + '">' + Object.keys(SPN).map((k) => '<option value="' + k + '"' + (an.sp === k ? ' selected' : '') + '>' + SPN[k][2] + ' ' + T(SPN[k][0], SPN[k][1]) + '</option>').join('') + '</select><select data-gnsex="' + who + '"><option value="F"' + (an.sex === 'F' ? ' selected' : '') + '>♀ ' + T('самка', 'female') + '</option><option value="M"' + (an.sex === 'M' ? ' selected' : '') + '>♂ ' + T('самец', 'male') + '</option></select><input data-gnname="' + who + '" list="gnNames" maxlength="24" placeholder="' + T('кличка (по желанию)', 'name (optional)') + '" value="' + esc(an.name) + '"></div>' : '')
       + panelHtml(an) + '<div class="ged">' + A.genes.map((g, i) => '<div class="grow"><span><b><i class="gdot ' + ACLS[level(an, i)] + '">' + GLET[i] + '</i> ' + T(GNAME[g][0], GNAME[g][1]) + '</b><small>' + T(GDESC[g][0], GDESC[g][1]) + '</small></span><span class="gpair">' + toggle(who, i, 0, an.g[i][0]) + toggle(who, i, 1, an.g[i][1]) + '</span></div>').join('') + '</div>'
       + '<div class="gmark"><span><b>' + T('Линия (маркеры)', 'Lineage (markers)') + '</b><small>' + T('Если оба маркера одинаковые, животное инбредное.', 'If both markers are equal the animal is inbred.') + '</small></span>' + [0, 1].map((k) => '<select data-gnmk="' + who + ':' + k + '">' + Array.from({ length: A.markers }, (_, n) => '<option value="' + n + '"' + (an.m[k] === n ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>').join('') + '</div>';
   }
@@ -776,21 +867,161 @@
   }
   const pct = (p) => (p > 0 && p * 100 < 10 ? (p * 100).toFixed(1) : Math.round(p * 100)) + '%';
 
+  /* ----- names of the animals: the pools of every language of the game, loaded on demand ----- */
+  const LTAG = { en: 'EN', de: 'DE', 'es-ES': 'ES', fr: 'FR', 'pt-BR': 'PT', ru: 'RU', tr: 'TR', 'zh-CN': '中' };
+  const KIND = { male: ['♂', 'мужское', 'male'], female: ['♀', 'женское', 'female'], unisex: ['⚥', 'любое', 'any'] };
+  let nameIdx = null;
+  async function loadNames() {
+    if (D.names || D.namesLoading) return;
+    D.namesLoading = true;
+    try { D.names = await (await fetch('names.json')).json(); } catch (e) { D.names = { locales: [], failed: true }; }
+    D.namesLoading = false;
+    nameIdx = null;
+    if (G.tab === 'animals') { const keep = window.scrollY; draw(); window.scrollTo(0, keep); }
+  }
+  function nameIndex() {
+    if (nameIdx || !D.names) return nameIdx;
+    nameIdx = new Map();
+    D.names.locales.forEach((l) => Object.keys(KIND).forEach((k) => (l[k] || []).forEach((n) => { const key = n.toLowerCase(); if (!nameIdx.has(key)) nameIdx.set(key, []); nameIdx.get(key).push({ loc: l.id, kind: k }); })));
+    return nameIdx;
+  }
+  // the game writes a name as a title: first letter of every word in capitals (Turkish rules for tr)
+  const capName = (n, loc) => (loc === 'zh-CN' ? n : n.replace(/(^|[^\p{L}])(\p{L})/gu, (m, a, b) => a + b.toLocaleUpperCase(loc === 'tr' ? 'tr' : undefined)));
+  const ordinal = (n) => (n % 100 >= 11 && n % 100 <= 13 ? n + 'th' : n % 10 === 1 ? n + 'st' : n % 10 === 2 ? n + 'nd' : n % 10 === 3 ? n + 'rd' : n + 'th');
+  const dynastyName = (stem, gen) => (gen < 2 ? stem : gen === 2 ? stem + ' Junior' : stem + ' the ' + ordinal(gen));
+  function parseDynasty(name) {
+    const n = (name || '').trim();
+    let m = /^(.+) Junior$/.exec(n);
+    if (m) return { stem: m[1], gen: 2 };
+    m = /^(.+) the (\d+)(?:st|nd|rd|th)$/.exec(n);
+    return m && +m[2] >= 3 ? { stem: m[1], gen: +m[2] } : null;
+  }
+  function nameInfo(name) {
+    const n = (name || '').trim();
+    if (!n) return null;
+    const dyn = parseDynasty(n), stem = dyn ? dyn.stem : n, idx = nameIndex();
+    return { dyn, stem, hit: (idx && idx.get(stem.toLowerCase())) || [] };
+  }
+  function nameChips(ni) {
+    if (!ni) return '';
+    const seen = {};
+    const hits = ni.hit.filter((h) => (seen[h.loc + h.kind] ? false : (seen[h.loc + h.kind] = true))).slice(0, 4);
+    return hits.map((h) => '<span class="gbadge nm" title="' + T('имя из списка языка ', 'a name from the list of ') + h.loc + ', ' + T(KIND[h.kind][1], KIND[h.kind][2]) + '">' + (LTAG[h.loc] || h.loc) + ' ' + KIND[h.kind][0] + '</span>').join('') + (ni.dyn ? '<span class="gbadge dyn" title="' + T('Имя по наследству: ' + ni.stem + ', поколение ' + ni.dyn.gen, 'An inherited name: ' + ni.stem + ', generation ' + ni.dyn.gen) + '">' + T('поколение ', 'gen ') + ni.dyn.gen + '</span>' : '');
+  }
+
   /* ----- herd ----- */
   const GOALS = [['all', 'Всё сразу', 'Everything'], ['yield', 'Молоко / шерсть', 'Milk / wool'], ['fert', 'Приплод', 'Offspring'], ['life', 'Долголетие', 'Lifespan'], ['dung', 'Навоз', 'Dung']];
   const goalScore = (r) => (G.goal === 'yield' ? r.S[2] : G.goal === 'fert' ? r.S[3] : G.goal === 'life' ? r.S[1] : G.goal === 'dung' ? r.S[0] : r.avg);
+  const cntGood = (an, i) => (an.g[i][0] === 2 ? 1 : 0) + (an.g[i][1] === 2 ? 1 : 0);
+  const goodCount = (an) => [0, 1, 2, 3, 4].reduce((s, i) => s + cntGood(an, i), 0);
+  const avgScale = (an) => scalesOf(an).reduce((a, b) => a + b, 0) / 5;
+  const expGood = (f, m) => [0, 1, 2, 3, 4].reduce((s, i) => s + (cntGood(f, i) + cntGood(m, i)) / 2, 0);
+  const codeOf = (herd) => { try { return btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, herd })))); } catch (e) { return ''; } };
+  const herdFrom = (code) => {
+    try {
+      const o = JSON.parse(decodeURIComponent(escape(atob(String(code).trim()))));
+      const list = (o && o.herd) || [];
+      return list.filter((a) => SPN[a.sp] && (a.sex === 'F' || a.sex === 'M') && Array.isArray(a.g) && a.g.length === 5 && a.g.every((p) => Array.isArray(p) && p.length === 2 && p.every((x) => x >= 0 && x <= 2)) && Array.isArray(a.m) && a.m.length === 2)
+        .map((a) => ({ sp: a.sp, sex: a.sex, name: String(a.name || '').slice(0, 24), g: a.g.map((p) => p.slice()), m: a.m.map((x) => Math.max(0, Math.min(D.animals.markers - 1, x | 0))) }));
+    } catch (e) { return null; }
+  };
+
   function herdHtml() {
-    return '<div class="gpairform"><div><h4 class="tlist">' + T('Добавить зверя в стадо', 'Add an animal to the herd') + '</h4>' + editor('draft', G.draft, true) + '<div class="tq" style="margin-top:12px"><button class="btn pri" data-gnherdadd>' + T('Добавить в стадо', 'Add to herd') + '</button></div></div><div><h4 class="tlist">' + T('Твоё стадо', 'Your herd') + '</h4><div id="gnHerd"></div><div class="fch" style="margin-top:12px">' + GOALS.map((g) => '<button class="fc' + (G.goal === g[0] ? ' on' : '') + '" data-gngoal="' + g[0] + '">' + T(g[1], g[2]) + '</button>').join('') + '</div></div></div><div id="gnPairs"></div>';
+    const edit = G.editIdx >= 0;
+    const dl = D.names ? '<datalist id="gnNames">' + (() => { const out = [], seen = {}; D.names.locales.forEach((l) => ['male', 'female', 'unisex'].forEach((k) => (l[k] || []).forEach((n) => { const c = capName(n, l.id); if (!seen[c]) { seen[c] = 1; out.push('<option value="' + esc(c) + '">'); } }))); return out.join(''); })() + '</datalist>' : '';
+    return '<div class="gpairform"><div><h4 class="tlist">' + (edit ? T('Правка зверя', 'Editing an animal') : T('Добавить зверя в стадо', 'Add an animal to the herd')) + '</h4>' + editor('draft', G.draft, true) + dl
+      + '<div class="tq" style="margin-top:12px"><button class="btn pri" data-gnherdadd>' + (edit ? T('Сохранить изменения', 'Save changes') : T('Добавить в стадо', 'Add to herd')) + '</button>' + (edit ? '<button class="btn" data-gnherdcancel>' + T('Отмена', 'Cancel') + '</button>' : '') + '<button class="btn gscanbtn" data-gnscan="animal">📷 ' + T('Сканер экрана', 'Screen scanner') + '</button></div>'
+      + '<p class="mut">' + T('Кличку можно взять из списка: её подсказывают на всех языках игры. Вкладка «Имена» объясняет, откуда берутся клички.', 'The name can be taken from the list: it suggests the names of every language of the game. The tab "Names" explains where the names come from.') + '</p></div>'
+      + '<div><h4 class="tlist">' + T('Твоё стадо', 'Your herd') + ' <small class="mut">(' + G.herd.length + ')</small></h4><div id="gnHerd"></div>' + herdTools() + '</div></div>';
   }
-  function herdRes() {
-    const list = document.getElementById('gnHerd'), pairs = document.getElementById('gnPairs');
-    if (!list || !pairs) return;
-    list.innerHTML = G.herd.length ? G.herd.map((a, i) => '<div class="gh">' + SPN[a.sp][2] + ' <b>' + (a.sex === 'F' ? '♀' : '♂') + ' ' + esc(a.name || T('без клички', 'no name')) + '</b><span class="apd sm">' + [0, 1, 2, 3, 4].map((k) => disc(a, k)).join('') + mdisc(a.m[0]) + mdisc(a.m[1]) + '</span><button class="fc" data-gnherddel="' + i + '" aria-label="' + T('убрать', 'remove') + '">✕</button></div>').join('') : '<p class="mut">' + T('Пока пусто.', 'Empty so far.') + '</p>';
-    const rows = [];
-    G.herd.filter((a) => a.sex === 'F').forEach((f) => G.herd.filter((m) => m.sex === 'M' && m.sp === f.sp).forEach((m) => rows.push({ f, m, r: childReport(f, m, f.sp) })));
-    if (!rows.length) { pairs.innerHTML = '<div class="tnote">' + T('Нужны самка и самец одного вида, и здесь появится рейтинг пар.', 'Add a female and a male of the same species and the ranking of pairs appears here.') + '</div>'; return; }
+  function herdTools() {
+    return '<div class="gport"><div class="tq"><button class="btn" data-gnexp>📤 ' + T('Код стада', 'Herd code') + '</button><button class="btn" data-gnimp>📥 ' + T('Загрузить из кода', 'Load from code') + '</button><button class="btn" data-gnherdclear>' + T('Очистить стадо', 'Clear herd') + '</button></div><textarea id="gnPort" rows="2" placeholder="' + T('Здесь появится код стада. Вставь чужой код и нажми «Загрузить из кода».', 'The herd code shows here. Paste a code and press "Load from code".') + '"></textarea></div>';
+  }
+  function herdCard(a, i) {
+    const ni = nameInfo(a.name), good = goodCount(a), inb = isInbred(a);
+    return '<div class="gh2' + (G.sel === i ? ' sel' : '') + '"><div class="gh2t"><span class="aico">' + SPN[a.sp][2] + '</span><b>' + (a.sex === 'F' ? '♀' : '♂') + ' ' + esc(a.name || T('без клички', 'no name')) + '</b>' + nameChips(ni) + '</div>'
+      + '<span class="apd sm">' + [0, 1, 2, 3, 4].map((k) => disc(a, k)).join('') + mdisc(a.m[0]) + mdisc(a.m[1]) + '</span>'
+      + '<div class="gh2m"><span class="gbadge' + (inb ? ' bad' : good >= 10 ? ' good' : '') + '">' + (inb ? 'INBRED' : '★ ' + good + '/10') + '</span><span class="gbadge" title="' + T('средний множитель генов', 'average multiplier of the genes') + '">×' + num1(avgScale(a), 2) + '</span>'
+      + '<button class="fc" data-gnherdpick="' + i + '">' + T('партнёры', 'partners') + '</button><button class="fc" data-gnherdedit="' + i + '" aria-label="' + T('править', 'edit') + '">✎</button><button class="fc" data-gnherddel="' + i + '" aria-label="' + T('убрать', 'remove') + '">✕</button></div></div>';
+  }
+  function aHerdRes() {
+    const list = document.getElementById('gnHerd');
+    if (!list) return;
+    list.innerHTML = G.herd.length ? G.herd.map(herdCard).join('') : '<p class="mut">' + T('Пока пусто. Заполни зверя слева (или включи сканер) и нажми «Добавить в стадо».', 'Empty so far. Fill in an animal on the left (or turn on the scanner) and press "Add to herd".') + '</p>';
+  }
+
+  /* ----- best pair of the herd ----- */
+  function pairHtml() {
+    return '<p class="mut">' + T('Звери берутся из вкладки «Мой скот». Выбери цель, и сайт поставит пары по порядку.', 'The animals come from the tab "My herd". Pick a goal and the site ranks the pairs.') + '</p><div class="fch">' + GOALS.map((g) => '<button class="fc' + (G.goal === g[0] ? ' on' : '') + '" data-gngoal="' + g[0] + '">' + T(g[1], g[2]) + '</button>').join('') + '</div><div id="gnPairs"></div>';
+  }
+  function aPairRes() {
+    const pairs = document.getElementById('gnPairs');
+    if (!pairs) return;
+    const pick = G.sel >= 0 && G.herd[G.sel] ? G.herd[G.sel] : null, rows = [];
+    G.herd.forEach((f) => { if (f.sex !== 'F') return; G.herd.forEach((m) => { if (m.sex === 'M' && m.sp === f.sp && (!pick || f === pick || m === pick)) rows.push({ f, m, r: childReport(f, m, f.sp) }); }); });
+    if (!rows.length) { pairs.innerHTML = '<div class="tnote">' + T('Нужны самка и самец одного вида во вкладке «Мой скот». Тогда здесь появится рейтинг пар.', 'Add a female and a male of the same species in the tab "My herd" and the ranking of pairs appears here.') + '</div>'; return; }
     rows.sort((p, q) => goalScore(q.r) - goalScore(p.r) || q.r.god - p.r.god);
-    pairs.innerHTML = '<h4 class="tlist">' + T('Лучшие пары', 'Best pairs') + '</h4><div class="ttab">' + rows.slice(0, 8).map((x, i) => '<div class="trow' + (i === 0 ? ' best' : '') + '"><div class="tn"><b>♀ ' + esc(x.f.name || '?') + ' + ♂ ' + esc(x.m.name || '?') + '</b>' + (i === 0 ? '<span class="ub new">' + T('лучшая', 'best') + '</span>' : '') + (x.r.pInbred > 0 ? '<span class="ub">⚠ ' + T('риск инбридинга ', 'inbred risk ') + Math.round(x.r.pInbred * 100) + '%</span>' : '') + '</div><div class="tx"><b>×' + num1(goalScore(x.r), 2) + '</b><small>' + T('по цели', 'for the goal') + '</small></div><div class="tx"><b>×' + num1(x.r.avg, 2) + '</b><small>' + T('в среднем', 'average') + '</small></div><div class="tx"><b>' + pct(x.r.god) + '</b><small>' + T('идеал', 'perfect') + '</small></div></div>').join('') + '</div>' + timelineHtml(rows[0].f.sp, rows[0].r);
+    pairs.innerHTML = (pick ? '<div class="tnote">' + T('Партнёры для: ', 'Partners for: ') + '<b>' + esc(pick.name || SPN[pick.sp][0]) + '</b> <button class="fc" data-gnherdpick="-1">' + T('показать все пары', 'show all pairs') + '</button></div>' : '')
+      + '<h4 class="tlist">' + T('Лучшие пары', 'Best pairs') + '</h4><div class="ttab">' + rows.slice(0, 10).map((x, i) => '<div class="trow' + (i === 0 ? ' best' : '') + '"><div class="tn"><b>♀ ' + esc(x.f.name || '?') + ' + ♂ ' + esc(x.m.name || '?') + '</b>' + (i === 0 ? '<span class="ub new">' + T('лучшая', 'best') + '</span>' : '') + (x.r.pInbred > 0 ? '<span class="ub">⚠ ' + T('риск инбридинга ', 'inbred risk ') + Math.round(x.r.pInbred * 100) + '%</span>' : '<span class="ub">✓ ' + T('без инбридинга', 'no inbreeding') + '</span>') + '</div><div class="tx"><b>×' + num1(goalScore(x.r), 2) + '</b><small>' + T('по цели', 'for the goal') + '</small></div><div class="tx"><b>' + num1(expGood(x.f, x.m), 1) + '</b><small>' + T('★ копий из 10', '★ copies of 10') + '</small></div><div class="tx"><b>' + pct(x.r.god) + '</b><small>' + T('идеал', 'perfect') + '</small></div></div>').join('') + '</div>' + timelineHtml(rows[0].f.sp, rows[0].r);
+  }
+
+  /* ----- the way to a perfect animal: the herd, bred generation after generation, simulated on the exact rules of the game ----- */
+  const mulberryA = (seed) => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  function planSim(pool, genes, K, runs) {
+    const rnd = mulberryA(20261024), need = genes.length * 2;
+    const fit = (an) => genes.reduce((s, i) => s + cntGood(an, i), 0);
+    const score = (an) => fit(an) * 10 + (isInbred(an) ? -5 : 0) + avgScale(an);
+    const pInb = (a, b) => { let n = 0; a.m.forEach((x) => b.m.forEach((y) => { if (x === y) n++; })); return n / 4; };
+    const results = [];
+    for (let run = 0; run < runs; run++) {
+      let males = pool.filter((a) => a.sex === 'M').map((a) => ({ g: a.g, m: a.m, sex: 'M' })), females = pool.filter((a) => a.sex === 'F').map((a) => ({ g: a.g, m: a.m, sex: 'F' }));
+      let done = -1;
+      for (let cycle = 0; cycle <= 60; cycle++) {
+        const perfect = (a) => fit(a) === need && !isInbred(a);
+        if (males.some(perfect) && females.some(perfect)) { done = cycle; break; }
+        let best = null;
+        males.slice(0, 4).forEach((m) => females.slice(0, 4).forEach((f) => { const j = genes.reduce((s, i) => s + (cntGood(m, i) + cntGood(f, i)) / 2, 0) - 6 * pInb(m, f); if (!best || j > best.j) best = { m, f, j }; }));
+        if (!best) break;
+        const kids = [];
+        for (let k = 0; k < K; k++) {
+          const g = best.f.g.map((p, i) => [p[rnd() < 0.5 ? 0 : 1], best.m.g[i][rnd() < 0.5 ? 0 : 1]]);
+          kids.push({ g, m: [best.f.m[rnd() < 0.5 ? 0 : 1], best.m.m[rnd() < 0.5 ? 0 : 1]], sex: rnd() < 0.5 ? 'M' : 'F' });
+        }
+        males = males.concat(kids.filter((k) => k.sex === 'M')).sort((a, b) => score(b) - score(a)).slice(0, 4);
+        females = females.concat(kids.filter((k) => k.sex === 'F')).sort((a, b) => score(b) - score(a)).slice(0, 4);
+      }
+      results.push(done);
+    }
+    const ok = results.filter((x) => x >= 0).sort((a, b) => a - b);
+    return { success: ok.length / runs, median: ok.length ? ok[Math.floor(ok.length / 2)] : null, p90: ok.length ? ok[Math.min(ok.length - 1, Math.floor(ok.length * 0.9))] : null };
+  }
+  function planHtml() {
+    const A = D.animals;
+    return '<p class="mut">' + T('Сайт берёт твоё стадо и показывает, как дойти до идеального зверя: какие гены закрепляем, сколько кругов размножения нужно и чего не хватает.', 'The site takes your herd and shows how to reach a perfect animal: which genes to fix, how many breeding rounds it takes and what is missing.') + '</p><div class="tq">'
+      + '<select data-gnplan="sp" class="gi">' + Object.keys(SPN).map((k) => '<option value="' + k + '"' + (G.plan.sp === k ? ' selected' : '') + '>' + SPN[k][2] + ' ' + T(SPN[k][0], SPN[k][1]) + '</option>').join('') + '</select>'
+      + '<label class="mut">' + T('детёнышей за круг', 'young per round') + ' <input class="gi" type="number" min="1" max="8" value="' + G.plan.k + '" data-gnplan="k" style="width:70px"></label></div>'
+      + '<div class="fch">' + A.genes.map((g, i) => '<label class="gpg"><input type="checkbox" data-gnplan="g' + i + '"' + (G.plan.genes[i] ? ' checked' : '') + '> <i class="gdot ' + ACLS[2] + '">' + GLET[i] + '</i> ' + T(GNAME[g][0], GNAME[g][1]) + '</label>').join('') + '</div><div id="gnPlanRes"></div>';
+  }
+  function aPlanRes() {
+    const box = document.getElementById('gnPlanRes');
+    if (!box) return;
+    const A = D.animals, sp = G.plan.sp, genes = [0, 1, 2, 3, 4].filter((i) => G.plan.genes[i]), pool = G.herd.filter((a) => a.sp === sp), c = A.species[sp] || A.species.cow;
+    if (!genes.length) { box.innerHTML = '<div class="tnote bad">' + T('Отметь хотя бы один ген цели.', 'Tick at least one target gene.') + '</div>'; return; }
+    const males = pool.filter((a) => a.sex === 'M'), females = pool.filter((a) => a.sex === 'F');
+    if (!males.length || !females.length) { box.innerHTML = '<div class="tnote bad">' + T('Для плана нужны самец и самка этого вида. Добавь их во вкладке «Мой скот».', 'The plan needs a male and a female of this species. Add them in the tab "My herd".') + '</div>'; return; }
+    const total = (i) => pool.reduce((s, a) => s + cntGood(a, i), 0), missing = genes.filter((i) => total(i) === 0);
+    const sim = planSim(pool, genes, Math.max(1, G.plan.k | 0), 300), cycle = c.pregnancy + c.grow;
+    const rows = genes.map((i) => { const have = total(i), carriers = pool.filter((a) => cntGood(a, i) > 0).length; return '<div class="trow"><div class="tn"><b><i class="gdot ' + ACLS[2] + '">' + GLET[i] + '</i> ' + T(GNAME[A.genes[i]][0], GNAME[A.genes[i]][1]) + '</b></div><div class="tx"><b>' + have + '</b><small>' + T('хороших копий в стаде', 'good copies in the herd') + '</small></div><div class="tx"><b>' + carriers + '/' + pool.length + '</b><small>' + T('зверей с ★', 'animals with ★') + '</small></div><div class="tx">' + (have === 0 ? '<b class="bad">' + T('нет', 'none') + '</b>' : have < 2 ? '<small>' + T('мало', 'few') + '</small>' : '<small>' + T('есть', 'ok') + '</small>') + '</div></div>'; }).join('');
+    const wildOne = 1 - Math.pow(1 - A.goodChance, 2);
+    let best = null;
+    males.forEach((m) => females.forEach((f) => { const j = genes.reduce((s, i) => s + (cntGood(m, i) + cntGood(f, i)) / 2, 0) - 6 * childReport(f, m, sp).pInbred; if (!best || j > best.j) best = { m, f, j }; }));
+    box.innerHTML = (missing.length ? '<div class="tnote bad">⛔ ' + T('В стаде нет ни одной хорошей копии для: ', 'The herd has no good copy for: ') + missing.map((i) => GLET[i]).join(', ') + '. ' + T('Мутаций на сервере нет, поэтому такой ген не появится сам. Поймай диких зверей: у каждого дикого шанс ★ на этом гене ' + Math.round(wildOne * 100) + '%, значит в среднем нужно ' + Math.ceil(1 / wildOne) + ' зверя на ген.', 'There are no mutations on the server, so such a gene will not appear by itself. Catch wild animals: a wild animal has a ' + Math.round(wildOne * 100) + '% chance of ★ on this gene, so about ' + Math.ceil(1 / wildOne) + ' animals per gene are needed.') + '</div>' : '')
+      + '<div class="tgrid4"><div class="tc best"><b>' + (sim.median === null ? '—' : sim.median) + '</b><small>' + T('кругов размножения (типично)', 'breeding rounds (typical)') + '</small></div><div class="tc"><b>' + (sim.p90 === null ? '—' : sim.p90) + '</b><small>' + T('кругов в неудачных случаях', 'rounds in unlucky cases') + '</small></div><div class="tc"><b>' + Math.round(sim.success * 100) + '%</b><small>' + T('случаев доходят до идеала', 'runs that reach perfection') + '</small></div><div class="tc"><b>' + (sim.median === null ? '—' : fmtSec(sim.median * cycle)) + '</b><small>' + T('времени (круг ' + fmtSec(cycle) + ')', 'time (a round is ' + fmtSec(cycle) + ')') + '</small></div></div>'
+      + '<h4 class="tlist">' + T('Что делать сейчас', 'What to do now') + '</h4><ol class="gsteps2">'
+      + '<li class="gst"><b class="gno">1</b><span><b>' + T('Скрести лучшую пару', 'Breed the best pair') + '</b><small>♀ ' + esc(best.f.name || '?') + ' + ♂ ' + esc(best.m.name || '?') + ' · ' + T('★ копий цели в среднем ', 'target ★ copies on average ') + num1(genes.reduce((s, i) => s + (cntGood(best.m, i) + cntGood(best.f, i)) / 2, 0), 1) + ' ' + T('из ', 'of ') + genes.length * 2 + '</small></span></li>'
+      + '<li class="gst"><b class="gno">2</b><span><b>' + T('Оставь лучших детёнышей', 'Keep the best young') + '</b><small>' + T('Для каждого пола оставляй детёныша с наибольшим числом ★ в генах цели. Одинаковые маркеры (INBRED) не оставляй: инбред режет показатели.', 'For each sex keep the young with the most ★ in the target genes. Do not keep equal markers (INBRED): inbreeding cuts the stats.') + '</small></span></li>'
+      + '<li class="gst"><b class="gno">3</b><span><b>' + T('Повтори с новым поколением', 'Repeat with the new generation') + '</b><small>' + T('Подожди, пока детёныши вырастут (' + fmtSec(c.grow) + '), добавь их во вкладку «Мой скот» и обнови план. Идеал достигнут, когда есть и самец, и самка без инбридинга со всеми копиями цели ★.', 'Wait until the young grow up (' + fmtSec(c.grow) + '), add them to the tab "My herd" and refresh the plan. The goal is reached when there is a male and a female without inbreeding with every target copy ★.') + '</small></span></li></ol>'
+      + '<h4 class="tlist">' + T('Узкие места по генам', 'Gene bottlenecks') + '</h4><div class="ttab">' + rows + '</div><p class="mut">' + T('План считается по точным правилам игры: детёныш берёт случайную копию гена у каждого родителя. Цифры получены 300 симуляциями, поэтому «типично» это среднее значение, а не гарантия.', 'The plan uses the exact rules of the game: the young takes a random copy of a gene from each parent. The numbers come from 300 simulations, so "typical" is a median and not a promise.') + '</p>';
   }
 
   /* ---------- livestock: timeline of one breeding round and the question list ---------- */
@@ -812,20 +1043,66 @@
       [T('Что за цветные числа справа?', 'What are the coloured numbers on the right?'), T('Это два маркера линии, числа от 0 до ' + (A.markers - 1) + '. Они не говорят о качестве. Нужны только чтобы понять родство: одинаковые маркеры дают инбридинг.', 'These are the two lineage markers, numbers from 0 to ' + (A.markers - 1) + '. They say nothing about quality. They only show kinship: equal markers mean inbreeding.'), 'g'],
       [T('Что такое INBRED и как его избежать?', 'What is INBRED and how to avoid it?'), T('Если оба маркера зверя одинаковые, он инбредный и его показатели урезаются. Детёныш получает по одному маркеру от каждого родителя, поэтому ищи пары, у которых нет общих маркеров: тогда шанс инбридинга 0%. Если один маркер общий, шанс 25%, если два, 50% или 100%.', 'If both markers of an animal are equal it is inbred and its stats are cut. The young takes one marker from each parent, so look for pairs with no common marker: then the inbred chance is 0%. One common marker gives 25%, two give 50% or 100%.'), 'g'],
       [T('Как гены переходят к детёнышу?', 'How do genes pass to the young?'), T('По каждому гену детёныш получает одну случайную копию от матери и одну от отца, по 50%. Если у матери обе копии хорошие, она передаст хорошую всегда.', 'For every gene the young gets one random copy from the mother and one from the father, 50% each. If both copies of the mother are good she always passes a good one.'), 'g'],
-      [T('Как вывести идеал?', 'How to breed a perfect animal?'), T('Цель: у обоих родителей обе копии каждого гена хорошие, тогда детёныш родится идеальным. Каждое поколение оставляй самых зелёных детёнышей, скрещивай их между собой и следи за маркерами. Вкладка «Подобрать пару из стада» считает шанс идеала для каждой пары.', 'The goal: both parents have both copies of every gene good, then the young is perfect. Keep the greenest young each generation, cross them and watch the markers. The tab "Best pair of the herd" counts the perfect chance of every pair.'), 'g'],
+      [T('Как вывести идеал?', 'How to breed a perfect animal?'), T('Цель: у обоих родителей обе копии каждого гена хорошие, тогда детёныш родится идеальным. Каждое поколение оставляй самых зелёных детёнышей, скрещивай их между собой и следи за маркерами. Вкладки «Подбор пары» и «План до идеала» считают шанс идеала и сколько кругов нужно.', 'The goal: both parents have both copies of every gene good, then the young is perfect. Keep the greenest young each generation, cross them and watch the markers. The tabs "Best pair" and "Way to perfect" count the chance of perfection and the number of rounds.'), 'g'],
       [T('Что даёт хороший и плохой ген?', 'What do a good and a bad gene give?'), A.genes.map((g) => T(GNAME[g][0], GNAME[g][1]) + ': ✕ ×' + A.mult[g].bad + ', ★ ×' + A.mult[g].good).join('; ') + '.', 'g'],
       [T('Сколько ждать до потомка?', 'How long to wait for the young?'), T('Беременность ' + fmtSec(c.pregnancy) + ', потом детёныш растёт ' + fmtSec(c.grow) + '. Пауза между спариваниями ' + fmtSec(A.breedCooldown) + ', её делит множитель плодовитости.', 'Pregnancy ' + fmtSec(c.pregnancy) + ', then the young grows for ' + fmtSec(c.grow) + '. The pause between matings is ' + fmtSec(A.breedCooldown) + ', divided by the fertility multiplier.'), 'g'],
       [T('Бывают ли мутации?', 'Are there mutations?'), A.mutation > 0 ? T('Да, ' + Math.round(A.mutation * 100) + '%.', 'Yes, ' + Math.round(A.mutation * 100) + '%.') : T('На нашем сервере мутации выключены.', 'Mutations are off on our server.'), 'g'],
-      [T('Какие дикие звери встречаются?', 'What wild animals are there?'), T('У каждой копии гена ' + Math.round(A.goodChance * 100) + '% быть хорошей и ' + Math.round(A.badChance * 100) + '% плохой. С шансом ' + num1(A.specialChance * 100, 1) + '% попадается особый зверь. Особых можно скрещивать: смотри вкладку «Особые животные».', 'Every gene copy is good with ' + Math.round(A.goodChance * 100) + '% and bad with ' + Math.round(A.badChance * 100) + '%. With ' + num1(A.specialChance * 100, 1) + '% a special animal shows up. Special ones can be crossed: see the tab "Special animals".'), 'g'],
+      [T('Какие дикие звери встречаются?', 'What wild animals are there?'), T('У каждой копии гена ' + Math.round(A.goodChance * 100) + '% быть хорошей и ' + Math.round(A.badChance * 100) + '% плохой. С шансом ' + num1(A.specialChance * 100, 1) + '% попадается особый зверь. Особых можно скрещивать: смотри вкладку «Особые».', 'Every gene copy is good with ' + Math.round(A.goodChance * 100) + '% and bad with ' + Math.round(A.badChance * 100) + '%. With ' + num1(A.specialChance * 100, 1) + '% a special animal shows up. Special ones can be crossed: see the tab "Special".'), 'g'],
       [T('От чего зависит цена у торговца?', 'What decides the vendor price?'), T('От среднего значения пяти генов: чем зеленее, тем дороже.', 'The average of the five genes: the greener, the more expensive.'), 'g'],
+      [T('У каких животных есть гены?', 'Which animals have genes?'), T('Гены D, L, Y, F, H есть у коров и овец.', 'The genes D, L, Y, F, H exist for cows and sheep.'), 'g'],
+      [T('Почему у зверей клички на разных языках?', 'Why do the animals have names in different languages?'), T('Кличка выбирается один раз при появлении зверя. Язык берётся случайно: вес ' + (A.names ? A.names.baseline : 5) + ' у языка сервера и по 1 за каждого игрока онлайн с таким языком игры. Подробности и списки всех языков во вкладке «Имена».', 'The name is picked once when the animal appears. The language is random: weight ' + (A.names ? A.names.baseline : 5) + ' for the server language and 1 for every player online with that game language. Details and the lists of every language are in the tab "Names".'), 'g'],
+      [T('Что значит «Junior» и «the 3rd» в кличке?', 'What do "Junior" and "the 3rd" in a name mean?'), T('Это имя по наследству. Детёныш того же пола, что родитель, получает его имя: второе поколение «Имя Junior», третье «Имя the 3rd» и дальше. Так видно линию отца у быков и линию матери у коров. Длиннее 24 знаков имя не бывает.', 'This is an inherited name. A young of the same sex as the parent gets its name: the second generation is "Name Junior", the third "Name the 3rd" and so on. This shows the father line of bulls and the mother line of cows. A name is never longer than 24 characters.'), 'g'],
+      [T('Что такое особый зверь?', 'What is a special animal?'), T('Дикий зверь с заданными генами и своим именем. Появляется с шансом ' + num1(A.specialChance * 100, 1) + '%, пока жив, второго с таким именем нет. Гены каждого особого и рецепты скрещивания во вкладке «Особые».', 'A wild animal with set genes and its own name. It shows up with a chance of ' + num1(A.specialChance * 100, 1) + '%, while it lives there is no second one with the same name. The genes of every special animal and the crossing recipes are in the tab "Special".'), 'g'],
+      [T('Сколько нужно поколений до идеала?', 'How many generations to a perfect animal?'), T('Зависит от стада. Вкладка «План до идеала» симулирует размножение по правилам игры и показывает типичное число кругов и время.', 'It depends on the herd. The tab "Way to perfect" simulates breeding by the rules of the game and shows the typical number of rounds and time.'), 'g'],
+      [T('Можно ли сканировать гены с экрана?', 'Can the genes be scanned from the screen?'), T('Да. Во вкладке «Мой скот» нажми «Сканер экрана», покажи окно игры и обведи ряд из пяти кругов и двух чисел. Сканер читает цвета кругов и числа. Проверь результат: цвета в игре бывают разными.', 'Yes. In the tab "My herd" press "Screen scanner", share the game window and drag a frame around the row of five circles and two numbers. The scanner reads the colours of the circles and the numbers. Check the result: colours differ between game settings.'), 'c'],
     ]) + '</div>';
   }
 
-  /* ----- special animals and the rules ----- */
+  /* ----- special animals: forced genes, how to find them and what to cross ----- */
   function specialHtml() {
-    const A = D.animals, sx = (s) => (s === 'Female' ? '♀' : '♂'), by = Object.fromEntries(A.specials.map((s) => [s.name, s]));
-    return '<p class="mut">' + T('Особые животные встречаются редко: шанс ' + num1(A.specialChance * 100, 1) + '% у нового дикого животного. Если скрестить двух особых, появится потомок с новым названием.', 'Special animals are rare: ' + num1(A.specialChance * 100, 1) + '% for a new wild animal. Crossing two special ones gives an offspring with a new name.') + '</p><div class="gspec">' + A.specials.map((s) => '<span class="gchip">' + sx(s.sex) + ' <b>' + esc(s.name) + '</b>' + (s.bad ? ' <i title="' + T('может иметь плохие гены', 'may have bad genes') + '">⚠</i>' : '') + '</span>').join('') + '</div><h4 class="tlist">' + T('Что с чем скрещивать', 'What to cross with what') + '</h4><div class="ttab">' + A.crosses.map((c) => '<div class="trow gcr"><div class="tn"><b>' + (by[c.a] ? sx(by[c.a].sex) : '') + ' ' + esc(c.a) + '</b><span class="mut">+</span><b>' + (by[c.b] ? sx(by[c.b].sex) : '') + ' ' + esc(c.b) + '</b></div><div class="tx" style="grid-column:span 3"><b>→ ' + esc(c.child) + '</b></div></div>').join('') + '</div>';
+    const A = D.animals, list = A.specialsFull || [], by = Object.fromEntries(list.map((s) => [s.name, s]));
+    const spName = (s) => (s.species.length ? s.species.map((k) => SPN[k][2] + ' ' + T(SPN[k][0], SPN[k][1])).join(', ') : T('любой вид', 'any species'));
+    const chanceFor = (s, sp) => {
+      const total = list.filter((x) => (!x.species.length || x.species.indexOf(sp) >= 0) && x.sex === s.sex && x.weight > 0).reduce((q, x) => q + x.weight, 0);
+      return total > 0 ? A.specialChance * s.weight / total : 0;
+    };
+    const card = (s) => {
+      const an = { sp: s.species[0] || 'cow', sex: s.sex, name: s.name, g: s.genes, m: [0, 1] }, S = scalesOf(Object.assign({}, an, { m: [0, 1] }));
+      const kinds = s.species.length ? s.species : Object.keys(SPN), good = goodCount(an);
+      return '<div class="card gspc"><div class="gspt"><b>' + (s.sex === 'F' ? '♀' : '♂') + ' ' + esc(s.name) + '</b>' + (s.allowBad ? '<span class="gbadge bad" title="' + T('Может быть с плохими генами по задумке', 'May have bad genes by design') + '">⚠ ' + T('есть плохие гены', 'has bad genes') + '</span>' : '<span class="gbadge good">' + T('без плохих генов', 'no bad genes') + '</span>') + '</div>'
+        + '<p class="mut">' + spName(s) + '</p><span class="apd sm">' + [0, 1, 2, 3, 4].map((k) => disc(an, k)).join('') + '</span>'
+        + '<div class="gh2m"><span class="gbadge">★ ' + good + '/10</span><span class="gbadge">×' + num1(S.reduce((a, b) => a + b, 0) / 5, 2) + '</span></div>'
+        + '<p class="mut">' + kinds.map((sp) => { const p = chanceFor(s, sp); return p > 0 ? SPN[sp][2] + ' ' + T('шанс 1 из ', 'chance 1 in ') + Math.round(1 / p).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU') : ''; }).filter(Boolean).join(' · ') + ' <small>' + T('(для нового дикого зверя этого вида и пола)', '(for a new wild animal of this species and sex)') + '</small></p></div>';
+    };
+    const kids = {};
+    (A.crossesFull || A.crosses.map((c) => ({ a: c.a, b: c.b, child: c.child }))).forEach((c) => (kids[c.child] = c));
+    const sx = (n) => (by[n] ? (by[n].sex === 'F' ? '♀' : '♂') : '');
+    return '<p class="mut">' + T('Особый зверь это животное с заданными генами и своим именем. Он появляется только среди диких, шанс ' + num1(A.specialChance * 100, 1) + '%, и пока он жив, второго с таким же именем не будет.', 'A special animal has set genes and its own name. It shows up only among wild ones with a chance of ' + num1(A.specialChance * 100, 1) + '%, and while it lives there is no second one with the same name.') + '</p>'
+      + '<div class="gspecs">' + list.map(card).join('') + '</div>'
+      + '<h4 class="tlist">' + T('Что с чем скрещивать', 'What to cross with what') + '</h4><p class="mut">' + T('Скрести двух особых зверей по таблице (мать и отец, разные пол). Детёныш получит новое особое имя, а гены по обычным правилам от родителей.', 'Cross two special animals by the table (mother and father, different sexes). The young gets a new special name and its genes by the usual rules from the parents.') + '</p>'
+      + '<div class="ttab">' + Object.values(kids).map((c) => '<div class="trow gcr"><div class="tn"><b>' + sx(c.a) + ' ' + esc(c.a) + '</b><span class="mut">+</span><b>' + sx(c.b) + ' ' + esc(c.b) + '</b></div><div class="tx" style="grid-column:span 3"><b>→ ' + esc(c.child) + '</b></div></div>').join('') + '</div>';
   }
+
+  /* ----- names: where they come from, what they mean and a finder ----- */
+  function namesHtml() {
+    if (!D.names) { loadNames(); return '<p class="mut" style="text-align:center">' + T('Загрузка списков имён…', 'Loading the name lists…') + '</p>'; }
+    if (D.names.failed) return '<p class="mut">' + T('Не удалось загрузить имена.', 'Could not load the names.') + '</p>';
+    const loc = D.names.locales.find((l) => l.id === G.nameLoc) || D.names.locales[0], q = G.nameq.trim().toLowerCase();
+    const idx = nameIndex(), hits = q ? [...idx.entries()].filter(([k]) => k.indexOf(q) >= 0).slice(0, 40) : [];
+    const pool = (k) => (loc[k] || []).filter((n) => !q || n.toLowerCase().indexOf(q) >= 0);
+    const chips = (k) => pool(k).map((n) => '<span class="gchip">' + esc(capName(n, loc.id)) + '</span>').join('');
+    const weights = D.names.locales.map((l) => ({ id: l.id, label: l.label, w: (l.id === D.names.house ? D.names.baseline : 0) + (+G.pplay[l.id] || 0) })), sum = weights.reduce((s, w) => s + w.w, 0);
+    const dyn = parseDynasty(G.dynq) || (G.dynq.trim() ? { stem: G.dynq.trim(), gen: 1 } : null);
+    return '<div class="ghow"><h4>' + T('Откуда берутся клички', 'Where the names come from') + '</h4><ul class="gl2"><li>' + T('Новорождённый и дикий зверь получает кличку один раз, при появлении. Дальше она не меняется.', 'A newborn and a wild animal gets its name once, when it appears. The name never changes.') + '</li><li>' + T('Язык клички выбирается случайно. Вес языка: ' + D.names.baseline + ' у языка сервера (' + D.names.house + ') плюс 1 за каждого игрока онлайн с таким языком игры. Поэтому на сервере с русскими игроками много русских кличек.', 'The language of the name is picked at random. The weight of a language: ' + D.names.baseline + ' for the server language (' + D.names.house + ') plus 1 for every player online who plays in that language. So a server with Russian players has many Russian names.') + '</li><li>' + T('Из списка выбранного языка берётся случайное имя нужного пола (мужское или женское) или универсальное. Кличка не длиннее ' + D.names.maxLength + ' знаков.', 'A random name of the right sex (male or female) or a unisex one is taken from the list of that language. A name is at most ' + D.names.maxLength + ' characters long.') + '</li><li>' + T('Имя по наследству: детёныш того же пола, что родитель, может получить его имя с приставкой. Второе поколение «Имя Junior», дальше «Имя the 3rd», «Имя the 4th» и так до 20. Так видно линию отца у быков и линию матери у коров.', 'Inherited name: a young of the same sex as the parent can get its name with a suffix. The second generation is "Name Junior", then "Name the 3rd", "Name the 4th" up to 20. This shows the father line of bulls and the mother line of cows.') + '</li></ul></div>'
+      + '<h4 class="tlist">' + T('Найти имя', 'Find a name') + '</h4><div class="tq"><input class="gi" id="gnNameQ" placeholder="' + T('часть имени на любом языке', 'part of a name in any language') + '" value="' + esc(G.nameq) + '"></div>'
+      + (q ? '<div class="gchips">' + (hits.length ? hits.map(([k, v]) => '<span class="gchip"><b>' + esc(capName(k, v[0].loc)) + '</b> ' + v.map((h) => '<i>' + (LTAG[h.loc] || h.loc) + ' ' + KIND[h.kind][0] + '</i>').join(' ') + '</span>').join('') : '<span class="mut">' + T('Такого имени нет в списках.', 'No such name in the lists.') + '</span>') + '</div>' : '')
+      + '<div class="fch">' + D.names.locales.map((l) => '<button class="fc' + (l.id === loc.id ? ' on' : '') + '" data-gnloc="' + l.id + '">' + esc(l.label) + ' <small>' + (l.male.length + l.female.length + l.unisex.length) + '</small></button>').join('') + '</div>'
+      + ['male', 'female', 'unisex'].map((k) => '<h4 class="tlist">' + KIND[k][0] + ' ' + T(KIND[k][1], KIND[k][2]) + ' <small class="mut">(' + pool(k).length + ')</small></h4><div class="gchips">' + (chips(k) || '<span class="mut">—</span>') + '</div>').join('')
+      + '<h4 class="tlist">' + T('Родословная по имени', 'Lineage by name') + '</h4><div class="tq"><input class="gi" id="gnDynQ" placeholder="' + T('например: Иван the 3rd или Maria Junior', 'for example: Ivan the 3rd or Maria Junior') + '" value="' + esc(G.dynq) + '"></div>'
+      + (dyn ? '<div class="tnote">' + T('Основатель линии: ', 'Founder of the line: ') + '<b>' + esc(dyn.stem) + '</b> · ' + T('поколение ', 'generation ') + dyn.gen + (nameChips(nameInfo(dyn.stem)) ? ' ' + nameChips(nameInfo(dyn.stem)) : '') + '</div><div class="gchips">' + Array.from({ length: 20 }, (_, i) => i + 1).map((g) => { const n = dynastyName(dyn.stem, g); return '<span class="gchip' + (g === dyn.gen ? ' on' : '') + (n.length > D.names.maxLength ? ' mut' : '') + '"><i>' + g + '</i> ' + esc(n) + (n.length > D.names.maxLength ? ' ✕' : '') + '</span>'; }).join('') + '</div><p class="mut">' + T('Если имя длиннее ' + D.names.maxLength + ' знаков, наследование обрывается: детёныш получает новую кличку. ✕ значит «слишком длинно».', 'If a name is longer than ' + D.names.maxLength + ' characters the inheritance stops and the young gets a new name. ✕ means too long.') + '</p>' : '')
+      + '<h4 class="tlist">' + T('Какой язык будет у следующей клички', 'Which language the next name gets') + '</h4><p class="mut">' + T('Впиши, сколько игроков онлайн играют на каждом языке.', 'Enter how many players online play in each language.') + '</p><div class="gplayers">' + weights.map((w) => '<label class="gcl"><span>' + esc(w.label) + ' <b>' + (sum ? Math.round(w.w / sum * 100) : 0) + '%</b></span><input class="gi" type="number" min="0" max="200" value="' + (+G.pplay[w.id] || 0) + '" data-gnpl="' + w.id + '"></label>').join('') + '</div>';
+  }
+
   function rulesHtml() {
     const A = D.animals, c = A.species.cow, v = A.verify;
     const row = (k, t) => '<div class="grule"><b>' + k + '</b><span>' + t + '</span></div>';
@@ -843,12 +1120,16 @@
   }
 
   function animalsHtml() {
-    const modes = [['one', 'Мой зверь', 'My animal'], ['child', 'Какой будет потомок', 'The offspring'], ['pair', 'Подобрать пару из стада', 'Best pair of the herd'], ['special', 'Особые животные', 'Special animals'], ['rules', 'Все правила', 'All the rules']];
+    if (!D.names) loadNames();
+    const modes = [['herd', 'Мой скот', 'My herd'], ['pair', 'Подбор пары', 'Best pair'], ['plan', 'План до идеала', 'Way to perfect'], ['child', 'Потомок двух', 'The offspring'], ['one', 'Что даёт зверь', 'What an animal gives'], ['special', 'Особые', 'Special'], ['names', 'Имена', 'Names'], ['rules', 'Правила и вопросы', 'Rules and questions']];
     const chips = '<div class="fch">' + modes.map((m) => '<button class="fc' + (G.amode === m[0] ? ' on' : '') + '" data-gnam="' + m[0] + '">' + T(m[1], m[2]) + '</button>').join('') + '</div>';
     const legend = '<p class="mut">' + T('Нажимай значки ★ ● ✕: у каждого гена две копии. Круги сверху выглядят как панель «Генетика» в игре.', 'Click the ★ ● ✕ icons: every gene has two copies. The circles on top look like the Genetics panel of the game.') + '</p>';
     if (G.amode === 'special') return chips + specialHtml();
     if (G.amode === 'rules') return chips + rulesHtml();
-    if (G.amode === 'pair') return chips + legend + herdHtml();
+    if (G.amode === 'names') return chips + namesHtml();
+    if (G.amode === 'pair') return chips + pairHtml();
+    if (G.amode === 'plan') return chips + planHtml();
+    if (G.amode === 'herd') return chips + legend + herdHtml();
     if (G.amode === 'child') return chips + legend + childHtml();
     return chips + legend + oneHtml();
   }
@@ -876,7 +1157,7 @@
   }
   function refresh() {
     if (G.tab === 'plants') { if (G.pmode === 'plan') planRes(); else if (G.pmode === 'cross') crossRes(); else if (G.pmode === 'cond') condRes(); return; }
-    if (G.amode === 'one') oneRes(); else if (G.amode === 'child') childRes(); else if (G.amode === 'pair') herdRes();
+    if (G.amode === 'one') oneRes(); else if (G.amode === 'child') childRes(); else if (G.amode === 'pair') aPairRes(); else if (G.amode === 'herd') aHerdRes(); else if (G.amode === 'plan') aPlanRes();
   }
   window.geneticsHtml = function () {
     setTimeout(() => { boot(); draw(); }, 0);
@@ -893,7 +1174,7 @@
     if ((b = e.target.closest('[data-gngoal]'))) { G.goal = b.dataset.gngoal; draw(); return; }
     if ((b = e.target.closest('[data-gncrop]'))) { G.crop = b.dataset.gncrop; draw(); return; }
     if ((b = e.target.closest('[data-gnlay]'))) { G.layout = b.dataset.gnlay; draw(); return; }
-    if (e.target.closest('[data-gnscan]')) { SC.open = true; scanDraw(); return; }
+    if ((b = e.target.closest('[data-gnscan]'))) { SC.kind = b.dataset.gnscan === 'animal' ? 'animal' : 'plant'; SC.region = SC.regions[SC.kind] || null; SC.open = true; SC.reading = null; SC.last = ''; SC.stable = 0; SC.added = ''; scanDraw(); return; }
     if (e.target.closest('[data-gnscanclose]')) { scanStop(true); SC.open = false; scanDraw(); return; }
     if (e.target.closest('[data-gnscanshare]')) { scanShare(); return; }
     if (e.target.closest('[data-gnscanstop]')) { scanStop(); return; }
@@ -908,8 +1189,19 @@
       an.g[+i][+k] = (an.g[+i][+k] + 1) % 3;
       const keep = window.scrollY; draw(); window.scrollTo(0, keep); return;
     }
-    if (e.target.closest('[data-gnherdadd]')) { const d = G.draft; G.herd.push({ sp: d.sp, sex: d.sex, name: d.name.trim(), g: d.g.map((p) => p.slice()), m: d.m.slice() }); G.draft.name = ''; save(); draw(); return; }
-    if ((b = e.target.closest('[data-gnherddel]'))) { G.herd.splice(+b.dataset.gnherddel, 1); save(); herdRes(); return; }
+    if (e.target.closest('[data-gnherdadd]')) {
+      const d = G.draft, an = { sp: d.sp, sex: d.sex, name: d.name.trim().slice(0, 24), g: d.g.map((p) => p.slice()), m: d.m.slice() };
+      if (G.editIdx >= 0 && G.herd[G.editIdx]) { G.herd[G.editIdx] = an; G.editIdx = -1; } else G.herd.push(an);
+      G.draft.name = ''; save(); const keep = window.scrollY; draw(); window.scrollTo(0, keep); return;
+    }
+    if (e.target.closest('[data-gnherdcancel]')) { G.editIdx = -1; G.draft = blank(); draw(); return; }
+    if ((b = e.target.closest('[data-gnherdedit]'))) { const a = G.herd[+b.dataset.gnherdedit]; if (a) { G.editIdx = +b.dataset.gnherdedit; G.draft = { sp: a.sp, sex: a.sex, name: a.name, g: a.g.map((p) => p.slice()), m: a.m.slice() }; draw(); window.scrollTo(0, document.getElementById('genetics').offsetTop); } return; }
+    if ((b = e.target.closest('[data-gnherddel]'))) { G.herd.splice(+b.dataset.gnherddel, 1); if (G.sel >= G.herd.length) G.sel = -1; G.editIdx = -1; save(); draw(); return; }
+    if ((b = e.target.closest('[data-gnherdpick]'))) { G.sel = +b.dataset.gnherdpick; G.amode = 'pair'; draw(); return; }
+    if (e.target.closest('[data-gnherdclear]')) { if (!G.herd.length || confirm(T('Очистить всё стадо?', 'Clear the whole herd?'))) { G.herd = []; G.sel = -1; G.editIdx = -1; save(); draw(); } return; }
+    if (e.target.closest('[data-gnexp]')) { const box = document.getElementById('gnPort'); if (box) { box.value = codeOf(G.herd); box.select(); } return; }
+    if (e.target.closest('[data-gnimp]')) { const box = document.getElementById('gnPort'), list = box ? herdFrom(box.value) : null; if (!list || !list.length) { if (box) box.classList.add('bad'); return; } G.herd = G.herd.concat(list); save(); draw(); return; }
+    if ((b = e.target.closest('[data-gnloc]'))) { G.nameLoc = b.dataset.gnloc; draw(); return; }
   });
   function addClone() {
     const inp = document.getElementById('gnAdd');
@@ -921,8 +1213,11 @@
     const n = document.getElementById('gnAdd'); if (n) n.focus();
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'gnAdd') { e.preventDefault(); addClone(); } });
+  const refocus = (id) => { const keep = window.scrollY; draw(); window.scrollTo(0, keep); const el = document.getElementById(id); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } };
   document.addEventListener('input', (e) => {
     const t = e.target;
+    if (t.id === 'gnNameQ') { G.nameq = t.value; refocus('gnNameQ'); return; }
+    if (t.id === 'gnDynQ') { G.dynq = t.value; refocus('gnDynQ'); return; }
     if (t.dataset && t.dataset.gnn !== undefined) { G.neigh[+t.dataset.gnn] = clean(t.value); t.value = G.neigh[+t.dataset.gnn]; crossRes(); }
     else if (t.dataset && t.dataset.gncond !== undefined) {
       const k = t.dataset.gncond;
@@ -937,8 +1232,15 @@
   });
   document.addEventListener('change', (e) => {
     const t = e.target;
+    if (t.dataset && t.dataset.gnpl !== undefined) { G.pplay[t.dataset.gnpl] = Math.max(0, +t.value || 0); const keep = window.scrollY; draw(); window.scrollTo(0, keep); return; }
+    if (t.dataset && t.dataset.gnplan !== undefined) {
+      const k = t.dataset.gnplan;
+      if (k === 'sp') G.plan.sp = t.value; else if (k === 'k') G.plan.k = Math.max(1, Math.min(8, +t.value || 1)); else if (k[0] === 'g') G.plan.genes[+k.slice(1)] = t.checked;
+      aPlanRes(); return;
+    }
     if (t.dataset && t.dataset.gnscanfile !== undefined) { if (t.files && t.files[0]) scanImage(t.files[0]); }
     else if (t.dataset && t.dataset.gnscanauto !== undefined) SC.auto = t.checked;
+    else if (t.dataset && t.dataset.gnscanmk !== undefined) { SC.markers = t.checked; scanDraw(); }
     else if (t.dataset && t.dataset.gnscandest !== undefined) SC.dest = t.value;
     else if (t.dataset && t.dataset.gnsp) { who(t.dataset.gnsp).sp = t.value; draw(); }
     else if (t.dataset && t.dataset.gnsex) { who(t.dataset.gnsex).sex = t.value; draw(); }

@@ -9,14 +9,21 @@
 <meta name="theme-color" content="#0c0e09">
 <meta name="google-site-verification" content="EgBGZ7Jw3SC5rdVgW6TBxUBymenPPJVoRjpsMXvzG7A" />
 <link rel="canonical" href="https://limarust.github.io/">
-<link rel="icon" href="img/lemon.png">
+<link rel="icon" href="img/lemon2.png">
+<link rel="apple-touch-icon" href="img/lemon2.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Lima Rust">
 <meta property="og:title" content="Lima Rust — сервер Rust с китами, магазином и рулеткой">
 <meta property="og:description" content="Расписание вайпов, киты, магазин, ранги и правила сервера Lima Rust.">
 <meta property="og:url" content="https://limarust.github.io/">
-<meta property="og:image" content="https://limarust.github.io/img/ui/brand.png">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://limarust.github.io/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lima Rust: сервер Rust с китами, магазином и рулеткой">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lima Rust — сервер Rust с китами, магазином и рулеткой">
+<meta name="twitter:image" content="https://limarust.github.io/img/og.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Lima Rust","alternateName":["LimaRust","Lima Rust сервер"],"url":"https://limarust.github.io/","inLanguage":["ru","en"]}</script>
 <title>Lima Rust — сервер Rust: киты, магазин, вайпы</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -79,7 +86,7 @@ section{padding-block:64px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;width:100%;max-width:820px;margin-top:10px}
 .stat{padding:14px;text-align:center}
 .stat b{display:block;font:700 28px var(--f-px);color:var(--lime);font-variant-numeric:tabular-nums}.stat span{font-size:13px;color:var(--mute)}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;animation:p 1.8s infinite}
+.dot.off{background:#7d836f;box-shadow:none;animation:none}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;animation:p 1.8s infinite}
 @keyframes p{50%{opacity:.35}}
 /* promo band */
 .band{background:linear-gradient(90deg,var(--lime),var(--orange),var(--lime));background-size:200% 100%;animation:shim 8s ease-in-out infinite alternate;color:var(--lime-d)}
@@ -633,6 +640,10 @@ const tokenGet=()=>{try{return localStorage.getItem('lima_token')||''}catch(e){r
 const tokenSet=t=>{try{t?localStorage.setItem('lima_token',t):localStorage.removeItem('lima_token')}catch(e){}};
 async function api(path,opt={}){if(!apiOn())throw new Error('api_off');const h={...(opt.headers||{})};const t=tokenGet();if(t)h.Authorization='Bearer '+t;const r=await fetch(API_URL+path,{...opt,headers:h});if(!r.ok)throw new Error('http_'+r.status);return r.json()}
 const LIVE={status:null,pricing:null};
+// on: the game server reports; off: it has not reported for 3 minutes or the Worker says so; unk: no answer from the Worker
+function srvState(){const s=LIVE.status;if(!s||!s.max)return{k:'unk'};if(s.offline||(s.updated&&Date.now()/1000-s.updated>180))return{k:'off'};return{k:'on',online:s.online,max:s.max}}
+function onlHtml(){const s=srvState();if(s.k==='on')return '<b id="onl">'+s.online+'</b><span><i class="dot"></i>онлайн из '+s.max+'</span>';if(s.k==='off')return '<b id="onl" style="font-size:20px">Сервер выключен</b><span><i class="dot off"></i>сейчас офлайн</span>';return '<b id="onl">—</b><span><i class="dot off"></i>статус недоступен</span>'}
+function paintOnline(){const c=document.getElementById('onlCard');if(c)c.innerHTML=onlHtml()}
 /* The account is never read from localStorage: it is rebuilt from the signed token on every visit. */
 let ACC=null;
 const saveA=()=>{if(!ACC)tokenSet('')};
@@ -718,7 +729,7 @@ function pollBlock(){const d=LIVE.pollData,p=d&&d.poll;
  return `<div style="display:grid;gap:12px;align-content:start">${head}${cards}<p class="note" style="margin:0">${when}${ACC?'':' Чтобы голосовать, войди через Steam или Google.'}</p>${nextMapNote(d)}</div>`}
 const nextMapNote=d=>d&&d.nextMap?`<p class="note" style="margin:0;color:var(--lime)">Следующая карта: ${esc(d.nextMap.label||'')} ${d.nextMap.seed?'Seed '+d.nextMap.seed+' · '+d.nextMap.size:''}</p>`:'';
 const SEC={
-home(){const w=nextWipes(1)[0];return `<section class="hero" id="home"><canvas id="cv"></canvas><div class="wrap"><div>${LEMON(96)}</div><h1>${wm(C.name)}</h1><p class="lead">Сервер Rust с лимонным настроением: честный вайп, свои киты, ранги за время и рулетка раз в день.</p><div class="chips"><span class="chip">${esc(C.region)}</span><span class="chip">${esc(C.rates)}</span><span class="chip">${esc(C.type)}</span></div><div class="ipbox"><span>connect ${esc(C.ip)}</span><button data-cp="${esc(C.ip)}">Копировать</button></div><div class="cta"><a class="btn pri" href="steam://connect/${esc(C.ip)}">Играть сейчас</a>${ACC?'':'<button class="btn" data-login>Войти</button>'}<a class="btn" href="#discord">Сообщество</a></div><div class="stats"><div class="card stat"><b id="onl">${LIVE.status&&LIVE.status.max?LIVE.status.online:(LIVE.status?'—':128)}</b><span><i class="dot"></i>онлайн из ${LIVE.status&&LIVE.status.max?LIVE.status.max:(LIVE.status?'—':200)}</span></div><div class="card stat">${wipeDev()?'<b style="font-size:20px">В разработке</b>':`<b data-end="${w?w.ts:0}" data-fmt="d">—</b>`}<span>до вайпа</span></div><div class="card stat"><b>${C.mapSize}</b><span>размер карты</span></div><div class="card stat"><b>4</b><span>игрока в команде</span></div></div></div></section>${C.promo.on?`<div class="band"><div class="wrap"><b>АКЦИЯ</b><span>${esc(C.promo.text)}</span><a class="btn" href="#donate">Подробнее</a></div></div>`:''}`},
+home(){const w=nextWipes(1)[0];return `<section class="hero" id="home"><canvas id="cv"></canvas><div class="wrap"><div>${LEMON(96)}</div><h1>${wm(C.name)}</h1><p class="lead">Сервер Rust с лимонным настроением: честный вайп, свои киты, ранги за время и рулетка раз в день.</p><div class="chips"><span class="chip">${esc(C.region)}</span><span class="chip">${esc(C.rates)}</span><span class="chip">${esc(C.type)}</span></div><div class="ipbox"><span>connect ${esc(C.ip)}</span><button data-cp="${esc(C.ip)}">Копировать</button></div><div class="cta"><a class="btn pri" href="steam://connect/${esc(C.ip)}">Играть сейчас</a>${ACC?'':'<button class="btn" data-login>Войти</button>'}<a class="btn" href="#discord">Сообщество</a></div><div class="stats"><div class="card stat" id="onlCard">${onlHtml()}</div><div class="card stat">${wipeDev()?'<b style="font-size:20px">В разработке</b>':`<b data-end="${w?w.ts:0}" data-fmt="d">—</b>`}<span>до вайпа</span></div><div class="card stat"><b>${C.mapSize}</b><span>размер карты</span></div><div class="card stat"><b>4</b><span>игрока в команде</span></div></div></div></section>${C.promo.on?`<div class="band"><div class="wrap"><b>АКЦИЯ</b><span>${esc(C.promo.text)}</span><a class="btn" href="#donate">Подробнее</a></div></div>`:''}`},
 cabinet(){if(!ACC)return '';const ri=rankOf(ACC.hours),r=C.ranks[ri],nx=C.ranks[ri+1];const pct=nx?Math.round((ACC.hours-r.h)/(nx.h-r.h)*100):100;const sw=sinceWipe();const w=nextWipes(1)[0];const adm=ACC.role==='admin',hasP=ACC.priv&&ACC.priv!=='—';
  const kits=C.kits.filter(k=>k.on).map((k,i)=>{const end=((ACC.kits||{})[k.n]||0)*1000,wl=Math.max(0,(+k.wipe||0)-sw),left=(end-Date.now())/1000;let st;if(k.type==='prem'&&!hasP)st='<b class="mut">Нужна привилегия</b>';else if(wl>0)st=`<b class="wt">После вайпа <span data-end="${Date.now()+wl*1000}">${fmt(wl)}</span></b>`;else if(left>0)st=`<b class="wt">Через <span data-end="${end}">${fmt(left)}</span></b>`;else st='<b class="ok">Доступен</b>';return `<div class="kr"><span>${esc(k.n)}</span>${st}</div>`}).join('');
  const pd=LIVE.pollData&&LIVE.pollData.poll,po=pd&&pd.myVote!=null?pd.options[pd.myVote]:null,mv=po?(po.label||'Карта '+(pd.myVote+1)):null;
@@ -954,8 +965,8 @@ function renderTop(q=''){const tb=$('#tb');if(!tb)return;queueMicrotask(()=>appl
 function tickBlocks(){const n=Date.now();$$('[data-bk]').forEach(e=>{const l=(+e.dataset.bk-n)/1000,b=e.querySelector('.bt');if(!b)return;if(l>0){b.textContent=fmt(l);e.classList.remove('open')}else{b.textContent='Доступно';e.classList.add('open')}});$$('[data-blkg]').forEach(e=>{const l=(+e.dataset.blkg-n)/1000;e.textContent=l>0?'· '+fmt(l):'· открыто'});$$('[data-blkn]').forEach(e=>{const l=(+e.dataset.blkn-n)/1000;e.textContent='через '+fmt(Math.max(0,l))})}
 function tick(){tickBlocks();const w=nextWipes(1)[0];const cd=$('#cd');if(cd&&w){const s=Math.max(0,(w.ts-Date.now())/1000|0);cd.innerHTML=[[s/86400|0,'ДНИ'],[s%86400/3600|0,'ЧАСЫ'],[s%3600/60|0,'МИН'],[s%60,'СЕК']].map(([v,l])=>`<div><b>${String(v).padStart(2,'0')}</b><span>${l}</span></div>`).join('')}
  $$('[data-end]').forEach(e=>{const l=(+e.dataset.end-Date.now())/1000;if(e.dataset.fmt==='d'){const s=Math.max(0,l|0);e.textContent=(s/86400|0)+(LANG==='en'?'d ':'д ')+(s%86400/3600|0)+(LANG==='en'?'h ':'ч ')+(s%3600/60|0)+(LANG==='en'?'m':'м')}else{if(l<=0&&!tick.r){tick.r=1;setTimeout(()=>{tick.r=0;renderSite()},50)}e.textContent=fmt(l)}})}
-setInterval(tick,1000);setInterval(()=>{const o=$('#onl');if(o&&!LIVE.status)o.textContent=120+Math.random()*16|0},4000);
-setInterval(async()=>{if(!apiOn()||document.hidden)return;await loadLive();const o=$('#onl');if(o&&LIVE.status&&LIVE.status.max)o.textContent=LIVE.status.online;renderTop($('#sq')?$('#sq').value:'')},60000);
+setInterval(tick,1000);setInterval(paintOnline,15000);
+setInterval(async()=>{if(!apiOn()||document.hidden)return;await loadLive();paintOnline();renderTop($('#sq')?$('#sq').value:'')},60000);
 let PR=null;function particles(){const c=$('#cv');if(!c)return;const x=c.getContext('2d');let w=c.width=c.offsetWidth,h=c.height=c.offsetHeight;const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
  /* Twinkle: every square fades in, stays and fades out in place, then reappears elsewhere. Same effect as the in-game menu. */
  const mk=age=>({x:Math.random()*w,y:Math.random()*h,r:3+(Math.random()*3|0),life:3500+Math.random()*3500,t:age});
@@ -1034,7 +1045,7 @@ $('#logo-s').innerHTML=LEMON(34);
  if(h.get('token')){tokenSet(h.get('token'));history.replaceState(null,'',location.pathname+location.search)}
  else if(h.get('login')==='failed'){history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>toast('Не удалось войти через Steam'),300)}
  renderSite();
- await Promise.all([loadSession(),loadLive()]);
+ await Promise.all([loadSession(),loadLive()]);paintOnline();
  renderSite();
  /* Google's consent screen links to these addresses. */
  const doc=location.hash.slice(1);if(LEGAL[doc])legal(doc);

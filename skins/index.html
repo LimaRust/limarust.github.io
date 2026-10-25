@@ -92,7 +92,7 @@ function name(sn){var v=items[sn];return v?v.split('|')[0]:sn}
 function status(r){return onServer[r[0]]?'on':(r[3]?'ok':'no')}
 var LABEL={on:'Загружен',ok:'Одобрен',no:'Не одобрен'},CLS={on:'t-on',ok:'t-ok',no:'t-no'};
 
-Promise.all([get(BASE+'items.json'),get(BASE+'site_index.json'),get(BASE+'server_skins.json').catch(function(){return []}),get(BASE+'curation.json').catch(function(){return {}})]).then(function(r){
+Promise.all([get(BASE+'items.json'),get(BASE+'site_index.json'),get(BASE+'server_skins.json').catch(function(){return []}),get('https://lima-rust-api.lima-backend.workers.dev/api/skins/curation').catch(function(){return {}})]).then(function(r){
   items=r[0];counts=r[1];
   r[2].forEach(function(id){onServer[id]=1});
   var c=r[3]||{};(c.Hidden||[]).forEach(function(id){hidden[id]=1});

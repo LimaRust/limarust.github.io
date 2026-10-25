@@ -53,12 +53,14 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
 <body>
 <header>
   <h1><b>Lima</b> <i>Rust</i> · скины</h1>
-  <span class="stat">Скрыто: <b id="sHid">0</b> · VIP: <b id="sVip">0</b></span>
+  <span class="stat">Скрыто: <b id="sHid">0</b> · привилегии: <b id="sVip">0</b></span>
+  <span class="stat" id="who"></span> <span class="stat" id="sync"></span>
   <span class="grow"></span>
   <button id="bPerms">Привилегии</button>
   <button id="bImport">Импорт</button>
   <button id="bExport" class="pri">Экспорт для сервера</button>
   <button id="bReset" class="warn">Сбросить всё</button>
+  <button id="bOut">Выйти</button>
 </header>
 <div id="banner" style="display:none;background:#3a2d12;color:var(--text);padding:8px 16px;font-size:13px"></div>
 <main>
@@ -95,6 +97,7 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
   <div id="lbInfo" style="color:var(--mute);margin-bottom:10px"></div>
   <div class="acts" style="display:flex;gap:8px;align-items:center"><span id="lbCount" class="stat"></span><span class="grow"></span><button id="lbHid" style="min-width:160px"></button><button id="lbVip" style="min-width:160px"></button></div>
 </dialog>
+<dialog id="lg"><h3 style="margin-top:0">Вход в админку скинов</h3><form id="lgForm" method="dialog" onsubmit="return false" style="display:grid;gap:10px;min-width:260px"><input id="lgLogin" autocomplete="username" placeholder="Логин"><input id="lgPass" type="password" autocomplete="current-password" placeholder="Пароль"><div id="lgErr" style="color:var(--orange);min-height:1.2em;font-size:13px"></div><button id="lgGo" class="pri" type="submit">Войти</button></form></dialog>
 <dialog id="pd"><h3 style="margin-top:0">Привилегии</h3><p class="stat">Каждая привилегия — это право Oxide вида <b>limaskins.имя</b>. Скины с привилегией видят все, а надеть могут только те, у кого есть это право. Выдать: <code>oxide.grant group mvp limaskins.mvp</code></p><div id="pList"></div><p style="display:flex;gap:8px;flex-wrap:wrap"><input id="pName" placeholder="Название, например MVP+" style="flex:1;min-width:160px"><input id="pId" placeholder="право: латиницей, mvp" style="flex:1;min-width:140px"><button id="pAdd" class="pri">Добавить</button></p><p style="text-align:right"><button id="pClose">Закрыть</button></p></dialog>
 <dialog id="dlg"><h3 id="dTitle" style="margin-top:0"></h3><textarea id="dText"></textarea><p style="display:flex;gap:8px;justify-content:flex-end"><button id="dOk" class="pri">OK</button><button id="dClose">Закрыть</button></p></dialog>
 <script>
@@ -102,12 +105,59 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
 'use strict';
 var BASE='../skins-data/', CDN='https://images.steamusercontent.com/ugc/', PER=60;
 var items={}, order=[], counts={}, cache={}, cur='', page=0;
-var st=load();
-
-function load(){try{var s=JSON.parse(localStorage.getItem('lima-skins-curation')||'{}');return {hid:s.hid||{},vip:s.vip||{},perms:(s.perms&&s.perms.length)?s.perms:[{id:'limaskins.vip',name:'VIP'}]}}catch(e){return {hid:{},vip:{},perms:[{id:'limaskins.vip',name:'VIP'}]}}}
-function save(){try{localStorage.setItem('lima-skins-curation',JSON.stringify(st))}catch(e){}stats()}
+var API=location.hostname==='127.0.0.1'?location.origin:'https://lima-rust-api.lima-backend.workers.dev',TOKEN_KEY='lima-skins-token';
+var token='',who='',ver=-1,sending=false,timer=0,serverSet={};
+try{token=localStorage.getItem(TOKEN_KEY)||''}catch(e){}
+function emptySt(){return {hid:{},vip:{},allowed:{},perms:[{id:'limaskins.vip',name:'VIP'}],hideUn:false}}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+var st=emptySt(),base=emptySt();
+function fromServer(s){var o=emptySt();(s.hidden||[]).forEach(function(i){o.hid[i]=1});(s.allowed||[]).forEach(function(i){o.allowed[i]=1});o.vip=s.vip||{};if(s.perms&&s.perms.length)o.perms=s.perms;o.hideUn=!!s.hideUn;return o}
+function diffOps(a,b){
+  var ops=[],on=[],off=[],al=[],un=[];
+  Object.keys(b.hid).forEach(function(i){if(!a.hid[i])on.push(i)});Object.keys(a.hid).forEach(function(i){if(!b.hid[i])off.push(i)});
+  if(on.length)ops.push({op:'hide.many',ids:on,on:true});if(off.length)ops.push({op:'hide.many',ids:off,on:false});
+  Object.keys(b.allowed).forEach(function(i){if(!a.allowed[i])ops.push({op:'allow',id:i,on:true})});Object.keys(a.allowed).forEach(function(i){if(!b.allowed[i])ops.push({op:'allow',id:i,on:false})});
+  Object.keys(b.vip).forEach(function(i){if(a.vip[i]!==b.vip[i])ops.push({op:'vip',id:i,perm:b.vip[i]})});Object.keys(a.vip).forEach(function(i){if(!b.vip[i])ops.push({op:'vip',id:i,perm:null})});
+  b.perms.forEach(function(p){if(!a.perms.some(function(x){return x.id===p.id}))ops.push({op:'perm.add',id:p.id,name:p.name})});
+  a.perms.forEach(function(p){if(!b.perms.some(function(x){return x.id===p.id}))ops.push({op:'perm.del',id:p.id})});
+  if(a.hideUn!==b.hideUn)ops.push({op:'hideUn',on:b.hideUn});
+  return ops;
+}
+function applyLocal(s,ops){ops.forEach(function(o){
+  if(o.op==='hide.many')o.ids.forEach(function(i){if(o.on)s.hid[i]=1;else delete s.hid[i]});
+  else if(o.op==='allow'){if(o.on)s.allowed[o.id]=1;else delete s.allowed[o.id]}
+  else if(o.op==='vip'){if(o.perm)s.vip[o.id]=o.perm;else delete s.vip[o.id]}
+  else if(o.op==='perm.add'){if(!s.perms.some(function(x){return x.id===o.id}))s.perms.push({id:o.id,name:o.name})}
+  else if(o.op==='perm.del'){s.perms=s.perms.filter(function(x){return x.id!==o.id});Object.keys(s.vip).forEach(function(i){if(s.vip[i]===o.id)delete s.vip[i]})}
+  else if(o.op==='hideUn')s.hideUn=o.on})}
+function setSync(text,cls){var e=$('sync');e.textContent=text;e.style.color=cls==='bad'?'var(--orange)':cls==='ok'?'var(--lime)':'var(--mute)'}
+function stamp(by,updated){return 'сохранено · версия '+ver+(by?' · последним менял: '+by:'')+(updated?' ('+new Date(updated*1000).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+')':'')}
+function save(){stats();clearTimeout(timer);setSync('есть несохранённые изменения…','');timer=setTimeout(send,500)}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({'Content-Type':'application/json','Authorization':'Bearer '+token},opt.headers||{});return fetch(API+path,opt).then(function(r){if(r.status===401){token='';try{localStorage.removeItem(TOKEN_KEY)}catch(e){}showLogin();throw new Error('401')}return r.json().then(function(b){if(!r.ok)throw new Error(b.message||b.error||r.status);return b})})}
+function send(){
+  if(sending){timer=setTimeout(send,400);return}
+  var snap=clone(st),ops=diffOps(base,snap);if(!ops.length){setSync(stamp(),'ok');return}
+  sending=true;setSync('сохраняю…','');
+  api('/api/skins-admin/ops',{method:'POST',body:JSON.stringify({ops:ops})}).then(function(r){
+    sending=false;ver=r.version;base=fromServer(r.state);
+    var later=diffOps(snap,st);st=clone(base);applyLocal(st,later);
+    stats();setSync(later.length?'сохраняю…':stamp(r.by,r.updated),later.length?'':'ok');if(later.length)save();draw();
+  }).catch(function(e){sending=false;setSync('не сохранилось: '+e.message,'bad')});
+}
+function loadState(){
+  return api('/api/skins-admin/state').then(function(r){
+    who=r.you;$('who').textContent='Вы: '+who;ver=r.version;base=fromServer(r.state);st=clone(base);fillPerms();stats();setSync(stamp(r.by,r.updated),'ok');if($('lg').open)$('lg').close();bulkLabel();draw();
+  });
+}
+function poll(){
+  if(!token||sending||diffOps(base,st).length)return;
+  api('/api/skins-admin/state').then(function(r){if(r.version===ver)return;ver=r.version;base=fromServer(r.state);st=clone(base);fillPerms();stats();setSync(stamp(r.by,r.updated),'ok');if(!$('lb').open)draw()}).catch(function(){});
+}
+setInterval(poll,15000);
+function showLogin(){$('lgErr').textContent='';if(!$('lg').open)$('lg').showModal()}
 function $(i){return document.getElementById(i)}
 function stats(){$('sHid').textContent=Object.keys(st.hid).length;$('sVip').textContent=Object.keys(st.vip).length}
+function isHid(r){var id=r[0];return !!st.hid[id]||(st.hideUn&&!serverSet[id]&&!st.allowed[id])}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
 
@@ -115,14 +165,15 @@ function permName(id){for(var i=0;i<st.perms.length;i++)if(st.perms[i].id===id)r
 function fillPerms(){var s=$('vipPerm'),keep=s.value;s.innerHTML='';st.perms.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent='Привилегия: '+p.name;s.appendChild(o)});if(keep)s.value=keep}
 fillPerms();
 
-Promise.all([get(BASE+'items.json'),get(BASE+'site_index.json'),get(BASE+'site_meta.json').catch(function(){return null})]).then(function(r){
+Promise.all([get(BASE+'items.json'),get(BASE+'site_index.json'),get(BASE+'site_meta.json').catch(function(){return null}),get(BASE+'server_skins.json').catch(function(){return []})]).then(function(r){
   items=r[0];counts=r[1];
-  var m=r[2];
+  var m=r[2];r[3].forEach(function(i){serverSet[i]=1});
   if(m&&!m.complete){$('banner').style.display='block';$('banner').textContent='Данные ещё догружаются: показано '+m.rows.toLocaleString('ru')+' из ~'+m.total.toLocaleString('ru')+' скинов. Страница обновится сама, когда всё будет готово.'}
   else if(m){$('banner').style.display='block';$('banner').style.background='#25301a';$('banner').textContent='Все данные загружены: '+m.rows.toLocaleString('ru')+' скинов, из них принято Steam: '+m.accepted.toLocaleString('ru')}
   order=Object.keys(counts).sort(function(a,b){return name(a).localeCompare(name(b))});
   cur=order[0]||'';
   drawItems();openItem(cur);stats();
+  if(token)loadState().catch(function(){});else showLogin();
 }).catch(function(e){$('grid').innerHTML='<div class="hint">Не удалось загрузить данные: '+esc(e.message)+'</div>'});
 
 function name(sn){var v=items[sn];return v?v.split('|')[0]:sn}
@@ -150,7 +201,7 @@ function filtered(){
   var out=rows.filter(function(r){
     if(q&&String(r[1]).toLowerCase().indexOf(q)<0&&r[0]!==q)return false;
     if(acc!=='all'&&String(r[3])!==acc)return false;
-    var hid=!!st.hid[r[0]],vip=!!st.vip[r[0]];
+    var hid=isHid(r),vip=!!st.vip[r[0]];
     if(stt==='hid'&&!hid)return false;if(stt==='vip'&&!vip)return false;if(stt==='show'&&hid)return false;
     return true;
   });
@@ -164,12 +215,12 @@ function draw(){
   curList=list;
   var slice=list.slice(page*PER,page*PER+PER),h='';
   slice.forEach(function(r,i){
-    var id=r[0],hid=!!st.hid[id],vip=st.vip[id];
+    var id=r[0],hid=isHid(r),vip=st.vip[id];
     var img=r[2]?CDN+r[2]+'/?imw=256&imh=256&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false':'';
     h+='<div class="card'+(hid?' hid':'')+(vip?' vip':'')+'" data-id="'+id+'" data-i="'+(page*PER+i)+'">'+
       '<div class="thumb" data-open="1" style="cursor:zoom-in;'+(img?'background-image:url('+img+')':'')+'"><span class="badge'+(r[3]?'':' no')+'">'+(r[3]?'✓ одобрен':'⚠ не одобрен')+'</span><span class="subs">★ '+r[4]+'</span></div>'+
       '<div class="meta"><div class="title"><a target="_blank" rel="noopener" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">'+esc(r[1])+'</a></div><div class="id">Предмет: <b>'+esc(name(cur))+'</b></div><div class="id">'+id+(vip?' · 🔒 '+esc(permName(vip)):'')+'</div>'+
-      '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">'+(vip?esc(permName(vip)):'Привилегия')+'</button></div></div></div>';
+      '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">'+(vip?esc(permName(vip)):'Привилегия')+'</button>'+(st.hideUn&&!serverSet[id]?'<button data-a="allow" class="'+(st.allowed[id]?'vipon':'')+'">'+(st.allowed[id]?'Разрешён':'Разрешить')+'</button>':'')+'</div></div></div>';
   });
   $('grid').innerHTML=h||'<div class="hint">Ничего не найдено</div>';
   $('pInfo').textContent=(page+1)+' / '+pages+' · '+list.length+' скинов';
@@ -178,7 +229,7 @@ function draw(){
 var curList=[],lbIndex=0;
 function lbDraw(){
   var r=curList[lbIndex];if(!r)return;
-  var id=r[0],hid=!!st.hid[id],vip=st.vip[id];
+  var id=r[0],hid=isHid(r),vip=st.vip[id];
   var img=r[2]?CDN+r[2]+'/?imw=1000&imh=1000&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false':'';
   $('lbImg').style.backgroundImage=img?'url('+img+')':'none';
   $('lbTitle').textContent=r[1];
@@ -201,6 +252,7 @@ $('grid').addEventListener('click',function(e){
   var id=b.closest('.card').dataset.id,a=b.dataset.a;
   if(a==='hid'){if(st.hid[id])delete st.hid[id];else st.hid[id]=1}
   if(a==='vip'){if(st.vip[id])delete st.vip[id];else st.vip[id]=$('vipPerm').value}
+  if(a==='allow'){if(st.allowed[id])delete st.allowed[id];else st.allowed[id]=1}
   save();draw();
 });
 
@@ -212,19 +264,17 @@ $('bHidePage').onclick=function(){filtered().slice(page*PER,page*PER+PER).forEac
 $('bHideUn').onclick=function(){(cache[cur]||[]).forEach(function(r){if(!r[3])st.hid[r[0]]=1});save();draw()};
 $('bShowAll').onclick=function(){(cache[cur]||[]).forEach(function(r){delete st.hid[r[0]]});save();draw()};
 $('bHideUnAll').onclick=function(){
-  if(!confirm('Скрыть все неодобренные скины во всех предметах? Загрузка может занять минуту.'))return;
-  var left=order.length,btn=$('bHideUnAll');btn.disabled=true;
-  order.forEach(function(sn){
-    var done=function(rows){rows.forEach(function(r){if(!r[3])st.hid[r[0]]=1});if(--left===0){btn.disabled=false;save();draw()}};
-    if(cache[sn])done(cache[sn]);else get(BASE+'site/'+sn+'.json').then(function(rows){cache[sn]=rows;done(rows)}).catch(function(){done([])});
-  });
+  if(!st.hideUn&&!confirm('Включить правило: скрыть ВСЕ скины, которых нет в списке одобренных игрой? Исключения можно сделать кнопкой «Разрешить».'))return;
+  st.hideUn=!st.hideUn;save();bulkLabel();draw();
 };
+function bulkLabel(){$('bHideUnAll').textContent=st.hideUn?'Правило «скрыть все неодобренные»: ВКЛ':'Правило «скрыть все неодобренные»: ВЫКЛ'}
+bulkLabel();
 
 function dialog(title,text,ok){$('dTitle').textContent=title;$('dText').value=text;$('dOk').onclick=function(){$('dlg').close();if(ok)ok($('dText').value)};$('dlg').showModal()}
 $('dClose').onclick=function(){$('dlg').close()};
 function exportJson(){
   var vip={};Object.keys(st.vip).forEach(function(id){(vip[st.vip[id]]=vip[st.vip[id]]||[]).push(id)});
-  var names={};st.perms.forEach(function(p){names[p.id]=p.name});return JSON.stringify({Hidden:Object.keys(st.hid),Vip:vip,Names:names});
+  var names={};st.perms.forEach(function(p){names[p.id]=p.name});return JSON.stringify({HideUnapproved:st.hideUn,Hidden:Object.keys(st.hid),Allowed:Object.keys(st.allowed),Vip:vip,Names:names});
 }
 $('bExport').onclick=function(){
   var t=exportJson();
@@ -233,7 +283,7 @@ $('bExport').onclick=function(){
 };
 $('bImport').onclick=function(){
   dialog('Импорт: вставь JSON из экспорта','',function(t){
-    try{var j=JSON.parse(t);st={hid:{},vip:{},perms:st.perms};(j.Hidden||[]).forEach(function(id){st.hid[id]=1});
+    try{var j=JSON.parse(t);st={hid:{},vip:{},allowed:{},perms:st.perms,hideUn:!!j.HideUnapproved};(j.Allowed||[]).forEach(function(id){st.allowed[id]=1});(j.Hidden||[]).forEach(function(id){st.hid[id]=1});
       Object.keys(j.Vip||{}).forEach(function(p){j.Vip[p].forEach(function(id){st.vip[id]=p})});
       var ids={};st.perms.forEach(function(p){ids[p.id]=1});Object.keys(j.Names||{}).concat(Object.keys(j.Vip||{})).forEach(function(p){if(!ids[p]){ids[p]=1;st.perms.push({id:p,name:(j.Names&&j.Names[p])||p})}});
       fillPerms();save();draw()}catch(e){alert('Не получилось прочитать: '+e.message)}
@@ -244,7 +294,14 @@ $('bPerms').onclick=function(){drawPerms();$('pd').showModal()};
 $('pClose').onclick=function(){$('pd').close()};
 $('pList').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var p=st.perms[+b.dataset.d];var used=Object.keys(st.vip).filter(function(k){return st.vip[k]===p.id});if(used.length&&!confirm('У этой привилегии '+used.length+' скинов. Снять с них привилегию и удалить её?'))return;used.forEach(function(k){delete st.vip[k]});st.perms.splice(+b.dataset.d,1);save();fillPerms();drawPerms();draw()});
 $('pAdd').onclick=function(){var name=$('pName').value.trim(),id=$('pId').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');if(!name||!id){alert('Нужны название и право (латиницей/цифрами).');return}id='limaskins.'+id;if(st.perms.some(function(p){return p.id===id})){alert('Такое право уже есть.');return}st.perms.push({id:id,name:name});$('pName').value='';$('pId').value='';save();fillPerms();drawPerms()};
-$('bReset').onclick=function(){if(confirm('Очистить все отметки?')){st={hid:{},vip:{},perms:st.perms};save();draw()}};
+$('lg').addEventListener('cancel',function(e){e.preventDefault()});
+$('lgForm').addEventListener('submit',function(e){e.preventDefault();var b=$('lgGo');b.disabled=true;$('lgErr').textContent='';
+  fetch(API+'/api/skins-admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:$('lgLogin').value,password:$('lgPass').value})}).then(function(r){return r.json().then(function(j){return [r.status,j]})}).then(function(x){b.disabled=false;
+    if(x[0]!==200||!x[1].token){$('lgErr').textContent=x[1].message||'Не получилось войти';return}
+    token=x[1].token;try{localStorage.setItem(TOKEN_KEY,token)}catch(e){}$('lgPass').value='';$('lg').close();loadState().catch(function(){});
+  }).catch(function(){b.disabled=false;$('lgErr').textContent='Нет связи с сервером'});});
+$('bOut').onclick=function(){token='';try{localStorage.removeItem(TOKEN_KEY)}catch(e){}who='';$('who').textContent='';setSync('','');st=emptySt();base=emptySt();stats();showLogin()};
+$('bReset').onclick=function(){if(confirm('Очистить все отметки?')){st={hid:{},vip:{},allowed:{},perms:st.perms,hideUn:false};save();bulkLabel();draw()}};
 })();
 </script>
 </body>

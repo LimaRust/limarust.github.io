@@ -55,6 +55,7 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
   <h1><b>Lima</b> <i>Rust</i> · скины</h1>
   <span class="stat">Скрыто: <b id="sHid">0</b> · VIP: <b id="sVip">0</b></span>
   <span class="grow"></span>
+  <button id="bPerms">Привилегии</button>
   <button id="bImport">Импорт</button>
   <button id="bExport" class="pri">Экспорт для сервера</button>
   <button id="bReset" class="warn">Сбросить всё</button>
@@ -70,9 +71,9 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
       <input id="q" type="search" placeholder="Поиск по названию или ID">
       <select id="fAcc"><option value="all">Все</option><option value="1">Только одобренные</option><option value="0">Только неодобренные</option></select>
       <select id="fSort"><option value="subs">Сначала популярные</option><option value="name">По названию</option><option value="id">Сначала новые</option></select>
-      <select id="fState"><option value="all">Любое состояние</option><option value="hid">Скрытые</option><option value="vip">VIP</option><option value="show">Показываются</option></select>
+      <select id="fState"><option value="all">Любое состояние</option><option value="hid">Скрытые</option><option value="vip">С привилегией</option><option value="show">Показываются</option></select>
       <span class="grow"></span>
-      <select id="vipPerm" title="Какая привилегия нужна для VIP-скинов"></select>
+      <select id="vipPerm" title="Какая привилегия нужна для скинов, которые ты отмечаешь кнопкой «Привилегия»"></select>
     </div>
     <div class="bar" id="bulk">
       <button id="bHidePage">Скрыть всё на странице</button>
@@ -94,23 +95,25 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
   <div id="lbInfo" style="color:var(--mute);margin-bottom:10px"></div>
   <div class="acts" style="display:flex;gap:8px;align-items:center"><span id="lbCount" class="stat"></span><span class="grow"></span><button id="lbHid" style="min-width:160px"></button><button id="lbVip" style="min-width:160px"></button></div>
 </dialog>
+<dialog id="pd"><h3 style="margin-top:0">Привилегии</h3><p class="stat">Каждая привилегия — это право Oxide вида <b>limaskins.имя</b>. Скины с привилегией видят все, а надеть могут только те, у кого есть это право. Выдать: <code>oxide.grant group mvp limaskins.mvp</code></p><div id="pList"></div><p style="display:flex;gap:8px;flex-wrap:wrap"><input id="pName" placeholder="Название, например MVP+" style="flex:1;min-width:160px"><input id="pId" placeholder="право: латиницей, mvp" style="flex:1;min-width:140px"><button id="pAdd" class="pri">Добавить</button></p><p style="text-align:right"><button id="pClose">Закрыть</button></p></dialog>
 <dialog id="dlg"><h3 id="dTitle" style="margin-top:0"></h3><textarea id="dText"></textarea><p style="display:flex;gap:8px;justify-content:flex-end"><button id="dOk" class="pri">OK</button><button id="dClose">Закрыть</button></p></dialog>
 <script>
 (function(){
 'use strict';
 var BASE='../skins-data/', CDN='https://images.steamusercontent.com/ugc/', PER=60;
-var PERMS=['limaskins.vip','limaskins.vip2','limaskins.vip3'];
 var items={}, order=[], counts={}, cache={}, cur='', page=0;
 var st=load();
 
-function load(){try{var s=JSON.parse(localStorage.getItem('lima-skins-curation')||'{}');return {hid:s.hid||{},vip:s.vip||{}}}catch(e){return {hid:{},vip:{}}}}
+function load(){try{var s=JSON.parse(localStorage.getItem('lima-skins-curation')||'{}');return {hid:s.hid||{},vip:s.vip||{},perms:(s.perms&&s.perms.length)?s.perms:[{id:'limaskins.vip',name:'VIP'}]}}catch(e){return {hid:{},vip:{},perms:[{id:'limaskins.vip',name:'VIP'}]}}}
 function save(){try{localStorage.setItem('lima-skins-curation',JSON.stringify(st))}catch(e){}stats()}
 function $(i){return document.getElementById(i)}
 function stats(){$('sHid').textContent=Object.keys(st.hid).length;$('sVip').textContent=Object.keys(st.vip).length}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
 
-PERMS.forEach(function(p){var o=document.createElement('option');o.value=p;o.textContent='VIP → '+p;$('vipPerm').appendChild(o)});
+function permName(id){for(var i=0;i<st.perms.length;i++)if(st.perms[i].id===id)return st.perms[i].name;return id}
+function fillPerms(){var s=$('vipPerm'),keep=s.value;s.innerHTML='';st.perms.forEach(function(p){var o=document.createElement('option');o.value=p.id;o.textContent='Привилегия: '+p.name;s.appendChild(o)});if(keep)s.value=keep}
+fillPerms();
 
 Promise.all([get(BASE+'items.json'),get(BASE+'site_index.json'),get(BASE+'site_meta.json').catch(function(){return null})]).then(function(r){
   items=r[0];counts=r[1];
@@ -165,8 +168,8 @@ function draw(){
     var img=r[2]?CDN+r[2]+'/?imw=256&imh=256&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false':'';
     h+='<div class="card'+(hid?' hid':'')+(vip?' vip':'')+'" data-id="'+id+'" data-i="'+(page*PER+i)+'">'+
       '<div class="thumb" data-open="1" style="cursor:zoom-in;'+(img?'background-image:url('+img+')':'')+'"><span class="badge'+(r[3]?'':' no')+'">'+(r[3]?'✓ одобрен':'⚠ не одобрен')+'</span><span class="subs">★ '+r[4]+'</span></div>'+
-      '<div class="meta"><div class="title"><a target="_blank" rel="noopener" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">'+esc(r[1])+'</a></div><div class="id">Предмет: <b>'+esc(name(cur))+'</b></div><div class="id">'+id+(vip?' · '+esc(vip):'')+'</div>'+
-      '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">VIP</button></div></div></div>';
+      '<div class="meta"><div class="title"><a target="_blank" rel="noopener" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">'+esc(r[1])+'</a></div><div class="id">Предмет: <b>'+esc(name(cur))+'</b></div><div class="id">'+id+(vip?' · 🔒 '+esc(permName(vip)):'')+'</div>'+
+      '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">'+(vip?esc(permName(vip)):'Привилегия')+'</button></div></div></div>';
   });
   $('grid').innerHTML=h||'<div class="hint">Ничего не найдено</div>';
   $('pInfo').textContent=(page+1)+' / '+pages+' · '+list.length+' скинов';
@@ -182,7 +185,7 @@ function lbDraw(){
   $('lbInfo').innerHTML='Предмет: <b>'+esc(name(cur))+'</b> · метка в Steam: «'+esc(r[5]||'—')+'»<br>ID '+id+' · '+(r[3]?'<b style="color:var(--lime)">одобрен Steam</b>':'<b style="color:var(--orange)">не одобрен</b>')+' · ★ '+r[4]+'<br><a target="_blank" rel="noopener" style="color:var(--lime)" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">Открыть в Steam</a>';
   $('lbCount').textContent=(lbIndex+1)+' из '+curList.length;
   $('lbHid').textContent=hid?'Скрыт (вернуть)':'Скрыть';$('lbHid').className=hid?'on':'';
-  $('lbVip').textContent=vip?'VIP: '+vip:'Сделать VIP';$('lbVip').className=vip?'vipon':'';
+  $('lbVip').textContent=vip?'Привилегия: '+permName(vip):'Назначить привилегию';$('lbVip').className=vip?'vipon':'';
 }
 function lbStep(d){lbIndex=(lbIndex+d+curList.length)%curList.length;lbDraw()}
 $('lbPrev').onclick=function(){lbStep(-1)};$('lbNext').onclick=function(){lbStep(1)};
@@ -221,7 +224,7 @@ function dialog(title,text,ok){$('dTitle').textContent=title;$('dText').value=te
 $('dClose').onclick=function(){$('dlg').close()};
 function exportJson(){
   var vip={};Object.keys(st.vip).forEach(function(id){(vip[st.vip[id]]=vip[st.vip[id]]||[]).push(id)});
-  return JSON.stringify({Hidden:Object.keys(st.hid),Vip:vip});
+  var names={};st.perms.forEach(function(p){names[p.id]=p.name});return JSON.stringify({Hidden:Object.keys(st.hid),Vip:vip,Names:names});
 }
 $('bExport').onclick=function(){
   var t=exportJson();
@@ -230,11 +233,18 @@ $('bExport').onclick=function(){
 };
 $('bImport').onclick=function(){
   dialog('Импорт: вставь JSON из экспорта','',function(t){
-    try{var j=JSON.parse(t);st={hid:{},vip:{}};(j.Hidden||[]).forEach(function(id){st.hid[id]=1});
-      Object.keys(j.Vip||{}).forEach(function(p){j.Vip[p].forEach(function(id){st.vip[id]=p})});save();draw()}catch(e){alert('Не получилось прочитать: '+e.message)}
+    try{var j=JSON.parse(t);st={hid:{},vip:{},perms:st.perms};(j.Hidden||[]).forEach(function(id){st.hid[id]=1});
+      Object.keys(j.Vip||{}).forEach(function(p){j.Vip[p].forEach(function(id){st.vip[id]=p})});
+      var ids={};st.perms.forEach(function(p){ids[p.id]=1});Object.keys(j.Names||{}).concat(Object.keys(j.Vip||{})).forEach(function(p){if(!ids[p]){ids[p]=1;st.perms.push({id:p,name:(j.Names&&j.Names[p])||p})}});
+      fillPerms();save();draw()}catch(e){alert('Не получилось прочитать: '+e.message)}
   });
 };
-$('bReset').onclick=function(){if(confirm('Очистить все отметки?')){st={hid:{},vip:{}};save();draw()}};
+function drawPerms(){var h='';st.perms.forEach(function(p,i){var n=0;Object.keys(st.vip).forEach(function(k){if(st.vip[k]===p.id)n++});h+='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)"><b style="flex:1">'+esc(p.name)+'</b><code>'+esc(p.id)+'</code><span class="stat">'+n+' скинов</span><button data-d="'+i+'">✕</button></div>'});$('pList').innerHTML=h||'<div class="hint">Привилегий нет</div>'}
+$('bPerms').onclick=function(){drawPerms();$('pd').showModal()};
+$('pClose').onclick=function(){$('pd').close()};
+$('pList').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var p=st.perms[+b.dataset.d];var used=Object.keys(st.vip).filter(function(k){return st.vip[k]===p.id});if(used.length&&!confirm('У этой привилегии '+used.length+' скинов. Снять с них привилегию и удалить её?'))return;used.forEach(function(k){delete st.vip[k]});st.perms.splice(+b.dataset.d,1);save();fillPerms();drawPerms();draw()});
+$('pAdd').onclick=function(){var name=$('pName').value.trim(),id=$('pId').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');if(!name||!id){alert('Нужны название и право (латиницей/цифрами).');return}id='limaskins.'+id;if(st.perms.some(function(p){return p.id===id})){alert('Такое право уже есть.');return}st.perms.push({id:id,name:name});$('pName').value='';$('pId').value='';save();fillPerms();drawPerms()};
+$('bReset').onclick=function(){if(confirm('Очистить все отметки?')){st={hid:{},vip:{},perms:st.perms};save();draw()}};
 })();
 </script>
 </body>

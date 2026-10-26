@@ -44,6 +44,9 @@ section{padding:14px 16px}
 .acts button.on{background:var(--red);border-color:var(--red)}
 .acts button.vipon{background:var(--orange);color:var(--limed);border-color:var(--orange)}
 .pager{display:flex;gap:8px;align-items:center;justify-content:center;margin:14px 0}
+.fav{position:absolute;top:6px;right:6px;width:32px;height:32px;padding:0;border-radius:50%;font-size:17px;line-height:1;background:#000a;color:var(--mute)}.fav.on{background:var(--orange);color:var(--limed);border-color:var(--orange)}
+.mine{color:var(--lime)}.other{color:var(--orange)}
+.note{padding:6px 8px;background:var(--panel2);border-radius:8px;margin-bottom:6px;font-size:13px}.note b{color:var(--lime)}.note small{color:var(--dim)}
 .hint{color:var(--mute);padding:30px;text-align:center}
 dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;max-width:640px;width:92vw}
 dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px monospace}
@@ -56,6 +59,7 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
   <span class="stat">Скрыто: <b id="sHid">0</b> · привилегии: <b id="sVip">0</b></span>
   <span class="stat" id="who"></span> <span class="stat" id="sync"></span>
   <span class="grow"></span>
+  <button id="bStars" class="pri">★ Общий список <span id="starN">0</span></button>
   <button id="bLog">История</button>
   <button id="bPerms">Привилегии</button>
   <button id="bImport">Импорт</button>
@@ -63,6 +67,7 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
   <button id="bReset" class="warn">Сбросить всё</button>
   <button id="bOut">Выйти</button>
 </header>
+<div id="toast" style="position:fixed;right:16px;bottom:16px;max-width:320px;background:var(--lime);color:var(--limed);padding:10px 14px;border-radius:10px;display:none;font-weight:700;z-index:50;box-shadow:0 6px 24px #0008"></div>
 <div id="banner" style="display:none;background:#3a2d12;color:var(--text);padding:8px 16px;font-size:13px"></div>
 <main>
   <aside>
@@ -84,6 +89,7 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
       <button id="bShowAll">Показать всё в предмете</button>
       <button id="bHideUnAll" class="warn">Скрыть неодобренные во ВСЕХ предметах</button>
     </div>
+    <div id="starBar" class="bar" style="display:none"><b>Общий список</b> <span class="stat">то, что вы с другом сохранили, чтобы обсудить; в большой картинке можно писать заметки</span><span class="grow"></span><span id="starWho" class="stat"></span><select id="starFilter"><option value="all">Все</option><option value="me">Сохранил я</option><option value="other">Сохранил друг</option></select><button id="bCopy">Скопировать список</button></div>
     <div id="grid" class="grid"></div>
     <div class="pager"><button id="pPrev">‹</button><span id="pInfo"></span><button id="pNext">›</button></div>
   </section>
@@ -96,9 +102,11 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
     <button id="lbNext" style="font-size:22px">›</button>
   </div>
   <div id="lbInfo" style="color:var(--mute);margin-bottom:10px"></div>
+  <div style="margin-bottom:10px"><button id="lbStar"></button>
+    <div id="lbBox" style="display:none;margin-top:8px"><div id="lbNotes" style="max-height:150px;overflow:auto"></div><div style="display:flex;gap:8px;margin-top:6px"><input id="lbNote" placeholder="Заметка для друга…" maxlength="300" style="flex:1"><button id="lbSend" class="pri">Отправить</button></div></div></div>
   <div class="acts" style="display:flex;gap:8px;align-items:center"><span id="lbCount" class="stat"></span><span class="grow"></span><button id="lbHid" style="min-width:160px"></button><button id="lbVip" style="min-width:160px"></button></div>
 </dialog>
-<dialog id="lg"><h3 style="margin-top:0">Вход в админку скинов</h3><form id="lgForm" method="dialog" onsubmit="return false" style="display:grid;gap:10px;min-width:260px"><input id="lgLogin" autocomplete="username" placeholder="Логин"><input id="lgPass" type="password" autocomplete="current-password" placeholder="Пароль"><div id="lgErr" style="color:var(--orange);min-height:1.2em;font-size:13px"></div><button id="lgGo" class="pri" type="submit">Войти</button></form></dialog>
+<dialog id="lg"><h3 style="margin-top:0">Нужна личная ссылка</h3><p class="stat" style="max-width:340px">Страницу можно смотреть всем, а менять только по личной ссылке (она заканчивается на <b>#k=…</b>). Открой свою ссылку, и вход произойдёт сам.</p><p style="text-align:right"><button id="lgClose">Смотреть без правок</button></p></dialog>
 <dialog id="ld"><h3 style="margin-top:0">История изменений</h3><div id="lList" style="max-height:60vh;overflow:auto"></div><p style="text-align:right"><button id="lClose">Закрыть</button></p></dialog>
 <dialog id="pd"><h3 style="margin-top:0">Привилегии</h3><p class="stat">Каждая привилегия — это право Oxide вида <b>limaskins.имя</b>. Скины с привилегией видят все, а надеть могут только те, у кого есть это право. Выдать: <code>oxide.grant group mvp limaskins.mvp</code></p><div id="pList"></div><p style="display:flex;gap:8px;flex-wrap:wrap"><input id="pName" placeholder="Название, например MVP+" style="flex:1;min-width:160px"><input id="pId" placeholder="право: латиницей, mvp" style="flex:1;min-width:140px"><button id="pAdd" class="pri">Добавить</button></p><p style="text-align:right"><button id="pClose">Закрыть</button></p></dialog>
 <dialog id="dlg"><h3 id="dTitle" style="margin-top:0"></h3><textarea id="dText"></textarea><p style="display:flex;gap:8px;justify-content:flex-end"><button id="dOk" class="pri">OK</button><button id="dClose">Закрыть</button></p></dialog>
@@ -106,14 +114,14 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
 (function(){
 'use strict';
 var BASE='../skins-data/', CDN='https://images.steamusercontent.com/ugc/', PER=60;
-var items={}, order=[], counts={}, cache={}, cur='', page=0;
+var starView=false,starRows=[],items={}, order=[], counts={}, cache={}, cur='', page=0;
 var API=location.hostname==='127.0.0.1'?location.origin:'https://lima-rust-api.lima-backend.workers.dev',TOKEN_KEY='lima-skins-token';
 var token='',who='',ver=-1,sending=false,timer=0,serverSet={};
 try{token=localStorage.getItem(TOKEN_KEY)||''}catch(e){}
-function emptySt(){return {hid:{},vip:{},allowed:{},who:{},perms:[{id:'limaskins.vip',name:'VIP'}],hideUn:false,hideUnBy:''}}
+function emptySt(){return {hid:{},vip:{},allowed:{},who:{},stars:{},perms:[{id:'limaskins.vip',name:'VIP'}],hideUn:false,hideUnBy:''}}
 function clone(o){return JSON.parse(JSON.stringify(o))}
 var st=emptySt(),base=emptySt();
-function fromServer(s){var o=emptySt();(s.hidden||[]).forEach(function(i){o.hid[i]=1});(s.allowed||[]).forEach(function(i){o.allowed[i]=1});o.vip=s.vip||{};if(s.perms&&s.perms.length)o.perms=s.perms;o.hideUn=!!s.hideUn;o.who=s.who||{};o.hideUnBy=s.hideUnBy||'';return o}
+function fromServer(s){var o=emptySt();(s.hidden||[]).forEach(function(i){o.hid[i]=1});(s.allowed||[]).forEach(function(i){o.allowed[i]=1});o.vip=s.vip||{};if(s.perms&&s.perms.length)o.perms=s.perms;o.hideUn=!!s.hideUn;o.who=s.who||{};o.stars=s.stars||{};o.hideUnBy=s.hideUnBy||'';return o}
 function diffOps(a,b){
   var ops=[],on=[],off=[],al=[],un=[];
   Object.keys(b.hid).forEach(function(i){if(!a.hid[i])on.push(i)});Object.keys(a.hid).forEach(function(i){if(!b.hid[i])off.push(i)});
@@ -122,6 +130,7 @@ function diffOps(a,b){
   Object.keys(b.vip).forEach(function(i){if(a.vip[i]!==b.vip[i])ops.push({op:'vip',id:i,perm:b.vip[i]})});Object.keys(a.vip).forEach(function(i){if(!b.vip[i])ops.push({op:'vip',id:i,perm:null})});
   b.perms.forEach(function(p){if(!a.perms.some(function(x){return x.id===p.id}))ops.push({op:'perm.add',id:p.id,name:p.name})});
   a.perms.forEach(function(p){if(!b.perms.some(function(x){return x.id===p.id}))ops.push({op:'perm.del',id:p.id})});
+  Object.keys(b.stars).forEach(function(i){if(!a.stars[i])ops.push({op:'star',id:i,item:b.stars[i].item,on:true})});Object.keys(a.stars).forEach(function(i){if(!b.stars[i])ops.push({op:'star',id:i,on:false})});
   if(a.hideUn!==b.hideUn)ops.push({op:'hideUn',on:b.hideUn});
   return ops;
 }
@@ -131,16 +140,20 @@ function applyLocal(s,ops){ops.forEach(function(o){
   else if(o.op==='vip'){if(o.perm)s.vip[o.id]=o.perm;else delete s.vip[o.id]}
   else if(o.op==='perm.add'){if(!s.perms.some(function(x){return x.id===o.id}))s.perms.push({id:o.id,name:o.name})}
   else if(o.op==='perm.del'){s.perms=s.perms.filter(function(x){return x.id!==o.id});Object.keys(s.vip).forEach(function(i){if(s.vip[i]===o.id)delete s.vip[i]})}
+  else if(o.op==='star'){if(o.on)s.stars[o.id]={by:who,item:o.item||'',at:0,notes:[]};else delete s.stars[o.id]}
   else if(o.op==='hideUn')s.hideUn=o.on})}
 function setSync(text,cls){var e=$('sync');e.textContent=text;e.style.color=cls==='bad'?'var(--orange)':cls==='ok'?'var(--lime)':'var(--mute)'}
 function stamp(by,updated){return 'сохранено · версия '+ver+(by?' · последним менял: '+by:'')+(updated?' ('+new Date(updated*1000).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+')':'')}
 function save(){stats();clearTimeout(timer);setSync('есть несохранённые изменения…','');timer=setTimeout(send,500)}
+function flush(){clearTimeout(timer);return send()}
+var toastTimer=0;function toast(text){var e=$('toast');e.textContent=text;e.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(function(){e.style.display='none'},6000)}
+function news(a,b){var ns=0,nn=0;Object.keys(b.stars).forEach(function(i){var s=b.stars[i],o=a.stars[i];if(s.by===who)return;if(!o)ns++;nn+=Math.max(0,(s.notes||[]).filter(function(n){return n.by!==who}).length-(o?(o.notes||[]).filter(function(n){return n.by!==who}).length:0))});return {ns:ns,nn:nn}}
 function api(path,opt){opt=opt||{};opt.headers=Object.assign({'Content-Type':'application/json','Authorization':'Bearer '+token},opt.headers||{});return fetch(API+path,opt).then(function(r){if(r.status===401){token='';try{localStorage.removeItem(TOKEN_KEY)}catch(e){}showLogin();throw new Error('401')}return r.json().then(function(b){if(!r.ok)throw new Error(b.message||b.error||r.status);return b})})}
 function send(){
-  if(sending){timer=setTimeout(send,400);return}
-  var snap=clone(st),ops=diffOps(base,snap);if(!ops.length){setSync(stamp(),'ok');return}
+  if(sending){timer=setTimeout(send,400);return Promise.resolve()}
+  var snap=clone(st),ops=diffOps(base,snap);if(!ops.length){setSync(stamp(),'ok');return Promise.resolve()}
   sending=true;setSync('сохраняю…','');
-  api('/api/skins-admin/ops',{method:'POST',body:JSON.stringify({ops:ops})}).then(function(r){
+  return api('/api/skins-admin/ops',{method:'POST',body:JSON.stringify({ops:ops})}).then(function(r){
     sending=false;ver=r.version;base=fromServer(r.state);fillWho();
     var later=diffOps(snap,st);st=clone(base);applyLocal(st,later);
     stats();setSync(later.length?'сохраняю…':stamp(r.by,r.updated),later.length?'':'ok');if(later.length)save();draw();
@@ -153,12 +166,22 @@ function loadState(){
 }
 function poll(){
   if(!token||sending||diffOps(base,st).length)return;
-  api('/api/skins-admin/state').then(function(r){if(r.version===ver)return;ver=r.version;base=fromServer(r.state);st=clone(base);fillPerms();fillWho();stats();setSync(stamp(r.by,r.updated),'ok');if(!$('lb').open)draw()}).catch(function(){});
+  api('/api/skins-admin/state').then(function(r){if(r.version===ver)return;var nw=news(base,fromServer(r.state));ver=r.version;base=fromServer(r.state);st=clone(base);fillPerms();fillWho();stats();setSync(stamp(r.by,r.updated),'ok');if(nw.ns||nw.nn)toast((r.by||'Друг')+': в общий список +'+nw.ns+(nw.nn?', новых заметок '+nw.nn:''));if(starView)buildStarRows(function(){if(!$('lb').open)draw();else lbDraw()});else if(!$('lb').open)draw();else lbDraw()}).catch(function(){});
 }
 setInterval(poll,15000);
-function showLogin(){$('lgErr').textContent='';if(!$('lg').open)$('lg').showModal()}
+function showLogin(){if(!$('lg').open)$('lg').showModal()}
+function startAuth(){
+  var m=/#k=([A-Za-z0-9_-]{20,80})/.exec(location.hash);
+  if(m){fetch(API+'/api/skins-admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:m[1]})}).then(function(r){return r.json().then(function(j){return [r.status,j]})}).then(function(x){
+    try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+    if(x[0]!==200||!x[1].token){setSync(x[1].message||'ссылка не подошла','bad');showLogin();return}
+    token=x[1].token;try{localStorage.setItem(TOKEN_KEY,token)}catch(e){}loadState().catch(function(){});
+  }).catch(function(){setSync('нет связи с сервером','bad')});return}
+  if(token)loadState().catch(function(){});else{setSync('только просмотр','');showLogin()}
+}
 function $(i){return document.getElementById(i)}
-function stats(){$('sHid').textContent=Object.keys(st.hid).length;$('sVip').textContent=Object.keys(st.vip).length}
+function starCounts(){var c={};Object.keys(st.stars).forEach(function(i){var b=st.stars[i].by||'?';c[b]=(c[b]||0)+1});return c}
+function stats(){$('starN').textContent=Object.keys(st.stars).length;var sc=starCounts();$('starWho').innerHTML=Object.keys(sc).map(function(n){return '<span class="'+(n===who?'mine':'other')+'">'+esc(n)+(n===who?' (я)':'')+': <b>'+sc[n]+'</b></span>'}).join(' · ');$('sHid').textContent=Object.keys(st.hid).length;$('sVip').textContent=Object.keys(st.vip).length}
 function isHid(r){var id=r[0];return !!st.hid[id]||(st.hideUn&&!serverSet[id]&&!st.allowed[id])}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
@@ -176,7 +199,7 @@ Promise.all([get(BASE+'items.json'),get(BASE+'site_index.json'),get(BASE+'site_m
   order=Object.keys(counts).sort(function(a,b){return name(a).localeCompare(name(b))});
   cur=order[0]||'';
   drawItems();openItem(cur);stats();
-  if(token)loadState().catch(function(){});else showLogin();
+  startAuth();
 }).catch(function(e){$('grid').innerHTML='<div class="hint">Не удалось загрузить данные: '+esc(e.message)+'</div>'});
 
 function name(sn){var v=items[sn];return v?v.split('|')[0]:sn}
@@ -193,14 +216,14 @@ $('items').addEventListener('click',function(e){var d=e.target.closest('.item');
 $('itemSearch').addEventListener('input',drawItems);
 
 function openItem(sn){
-  cur=sn;page=0;drawItems();
+  starView=false;$('starBar').style.display='none';cur=sn;page=0;drawItems();
   if(cache[sn]){draw();return}
   $('grid').innerHTML='<div class="hint">Загрузка…</div>';
-  get(BASE+'site/'+sn+'.json').then(function(rows){cache[sn]=rows;if(cur===sn)draw()}).catch(function(e){$('grid').innerHTML='<div class="hint">Нет данных: '+esc(e.message)+'</div>'});
+  get(BASE+'site/'+sn+'.json').then(function(rows){rows.forEach(function(r){r[6]=sn});cache[sn]=rows;if(cur===sn&&!starView)draw()}).catch(function(e){$('grid').innerHTML='<div class="hint">Нет данных: '+esc(e.message)+'</div>'});
 }
 
 function filtered(){
-  var rows=cache[cur]||[],q=$('q').value.trim().toLowerCase(),acc=$('fAcc').value,stt=$('fState').value,sort=$('fSort').value;
+  var rows=starView?starRows.filter(function(r){var s=st.stars[r[0]];if(!s)return false;var f=$('starFilter').value;return f==='all'||(f==='me'?s.by===who:s.by!==who)}):(cache[cur]||[]),q=$('q').value.trim().toLowerCase(),acc=$('fAcc').value,stt=$('fState').value,sort=$('fSort').value;
   var out=rows.filter(function(r){
     if(q&&String(r[1]).toLowerCase().indexOf(q)<0&&r[0]!==q)return false;
     if(acc!=='all'&&String(r[3])!==acc)return false;
@@ -221,8 +244,8 @@ function draw(){
     var id=r[0],hid=isHid(r),vip=st.vip[id];
     var img=r[2]?CDN+r[2]+'/?imw=256&imh=256&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false':'';
     h+='<div class="card'+(hid?' hid':'')+(vip?' vip':'')+'" data-id="'+id+'" data-i="'+(page*PER+i)+'">'+
-      '<div class="thumb" data-open="1" style="cursor:zoom-in;'+(img?'background-image:url('+img+')':'')+'"><span class="badge'+(r[3]?'':' no')+'">'+(r[3]?'✓ одобрен':'⚠ не одобрен')+'</span><span class="subs">★ '+r[4]+'</span></div>'+
-      '<div class="meta"><div class="title"><a target="_blank" rel="noopener" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">'+esc(r[1])+'</a></div><div class="id">Предмет: <b>'+esc(name(cur))+'</b></div><div class="id">'+id+(vip?' · 🔒 '+esc(permName(vip)):'')+'</div>'+(st.who[id]?'<div class="id">отметил: <b>'+esc(st.who[id])+'</b></div>':'')+
+      '<div class="thumb" data-open="1" style="cursor:zoom-in;'+(img?'background-image:url('+img+')':'')+'"><span class="badge'+(r[3]?'':' no')+'">'+(r[3]?'✓ одобрен':'⚠ не одобрен')+'</span><span class="subs">★ '+r[4]+'</span><button class="fav'+(st.stars[id]?' on':'')+'" data-fav="'+id+'" title="В общий список">'+(st.stars[id]?'★':'☆')+'</button></div>'+
+      '<div class="meta"><div class="title"><a target="_blank" rel="noopener" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">'+esc(r[1])+'</a></div><div class="id">Предмет: <b>'+esc(name(cur))+'</b></div><div class="id">'+id+(vip?' · 🔒 '+esc(permName(vip)):'')+'</div>'+(st.who[id]?'<div class="id">отметил: <b>'+esc(st.who[id])+'</b></div>':'')+(st.stars[id]?'<div class="id">★ сохранил: <b class="'+(st.stars[id].by===who?'mine':'other')+'">'+esc(st.stars[id].by)+(st.stars[id].by===who?' (я)':'')+'</b>'+((st.stars[id].notes||[]).length?' · 💬 '+st.stars[id].notes.length:'')+'</div>':'')+
       '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">'+(vip?esc(permName(vip)):'Привилегия')+'</button>'+(st.hideUn&&!serverSet[id]?'<button data-a="allow" class="'+(st.allowed[id]?'vipon':'')+'">'+(st.allowed[id]?'Разрешён':'Разрешить')+'</button>':'')+'</div></div></div>';
   });
   $('grid').innerHTML=h||'<div class="hint">Ничего не найдено</div>';
@@ -240,6 +263,8 @@ function lbDraw(){
   $('lbCount').textContent=(lbIndex+1)+' из '+curList.length;
   $('lbHid').textContent=hid?'Скрыт (вернуть)':'Скрыть';$('lbHid').className=hid?'on':'';
   $('lbVip').textContent=vip?'Привилегия: '+permName(vip):'Назначить привилегию';$('lbVip').className=vip?'vipon':'';
+  var sv=st.stars[id];$('lbStar').textContent=sv?'★ В общем списке (убрать)':'☆ В общий список';$('lbStar').className=sv?'vipon':'';$('lbBox').style.display=sv?'block':'none';
+  var nh='';((sv&&sv.notes)||[]).forEach(function(n){var d=new Date((n.at||0)*1000);nh+='<div class="note"><b>'+esc(n.by)+'</b> <small>'+(n.at?d.toLocaleDateString('ru')+' '+d.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}):'')+'</small><br>'+esc(n.text)+'</div>'});$('lbNotes').innerHTML=nh||'<div class="stat">Заметок пока нет</div>';
 }
 function lbStep(d){lbIndex=(lbIndex+d+curList.length)%curList.length;lbDraw()}
 $('lbPrev').onclick=function(){lbStep(-1)};$('lbNext').onclick=function(){lbStep(1)};
@@ -249,6 +274,7 @@ $('lbVip').onclick=function(){var id=curList[lbIndex][0];if(st.vip[id])delete st
 $('lb').addEventListener('keydown',function(e){if(e.key==='ArrowLeft')lbStep(-1);if(e.key==='ArrowRight')lbStep(1)});
 
 $('grid').addEventListener('click',function(e){
+  var fb=e.target.closest('.fav');if(fb){var row=null;for(var k=0;k<curList.length;k++)if(curList[k][0]===fb.dataset.fav){row=curList[k];break}if(row)toggleStar(row);return}
   var t=e.target.closest('.thumb');
   if(t&&!e.target.closest('a')){lbIndex=+t.closest('.card').dataset.i;$('lb').showModal();lbDraw();return}
   var b=e.target.closest('button');if(!b)return;
@@ -259,7 +285,7 @@ $('grid').addEventListener('click',function(e){
   save();draw();
 });
 
-['q','fAcc','fSort','fState'].forEach(function(i){$(i).addEventListener('input',function(){page=0;draw()})});
+['q','fAcc','fSort','fState','starFilter'].forEach(function(i){$(i).addEventListener('input',function(){page=0;draw()})});
 $('pPrev').onclick=function(){if(page>0){page--;draw();scrollTo(0,0)}};
 $('pNext').onclick=function(){page++;draw();scrollTo(0,0)};
 
@@ -297,13 +323,25 @@ $('bPerms').onclick=function(){drawPerms();$('pd').showModal()};
 $('pClose').onclick=function(){$('pd').close()};
 $('pList').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var p=st.perms[+b.dataset.d];var used=Object.keys(st.vip).filter(function(k){return st.vip[k]===p.id});if(used.length&&!confirm('У этой привилегии '+used.length+' скинов. Снять с них привилегию и удалить её?'))return;used.forEach(function(k){delete st.vip[k]});st.perms.splice(+b.dataset.d,1);save();fillPerms();drawPerms();draw()});
 $('pAdd').onclick=function(){var name=$('pName').value.trim(),id=$('pId').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');if(!name||!id){alert('Нужны название и право (латиницей/цифрами).');return}id='limaskins.'+id;if(st.perms.some(function(p){return p.id===id})){alert('Такое право уже есть.');return}st.perms.push({id:id,name:name});$('pName').value='';$('pId').value='';save();fillPerms();drawPerms()};
-$('lg').addEventListener('cancel',function(e){e.preventDefault()});
-$('lgForm').addEventListener('submit',function(e){e.preventDefault();var b=$('lgGo');b.disabled=true;$('lgErr').textContent='';
-  fetch(API+'/api/skins-admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:$('lgLogin').value,password:$('lgPass').value})}).then(function(r){return r.json().then(function(j){return [r.status,j]})}).then(function(x){b.disabled=false;
-    if(x[0]!==200||!x[1].token){$('lgErr').textContent=x[1].message||'Не получилось войти';return}
-    token=x[1].token;try{localStorage.setItem(TOKEN_KEY,token)}catch(e){}$('lgPass').value='';$('lg').close();loadState().catch(function(){});
-  }).catch(function(){b.disabled=false;$('lgErr').textContent='Нет связи с сервером'});});
-$('bOut').onclick=function(){token='';try{localStorage.removeItem(TOKEN_KEY)}catch(e){}who='';$('who').textContent='';setSync('','');st=emptySt();base=emptySt();stats();showLogin()};
+$('lgClose').onclick=function(){$('lg').close()};
+$('bOut').onclick=function(){token='';try{localStorage.removeItem(TOKEN_KEY)}catch(e){}who='';$('who').textContent='';setSync('только просмотр','');st=emptySt();base=emptySt();stats();draw();showLogin()};
+function toggleStar(r){var id=r[0];if(st.stars[id])delete st.stars[id];else st.stars[id]={by:who,item:r[6]||cur,at:0,notes:[]};save();if(starView)starRows=starRows.filter(function(x){return st.stars[x[0]]});draw();if($('lb').open)lbDraw()}
+function openStars(){
+  starView=true;page=0;$('starBar').style.display='flex';$('grid').innerHTML='<div class="hint">Загрузка…</div>';
+  buildStarRows(draw);
+}
+function buildStarRows(done){
+  var need={};Object.keys(st.stars).forEach(function(id){need[st.stars[id].item]=1});
+  Promise.all(Object.keys(need).map(function(sn){return cache[sn]?Promise.resolve():get(BASE+'site/'+sn+'.json').then(function(rows){rows.forEach(function(r){r[6]=sn});cache[sn]=rows}).catch(function(){})})).then(function(){
+    starRows=[];Object.keys(st.stars).forEach(function(id){var rs=cache[st.stars[id].item]||[];for(var i=0;i<rs.length;i++)if(rs[i][0]===id){starRows.push(rs[i]);break}});
+    if(starView)done();
+  });
+}
+$('bStars').onclick=function(){if(starView)openItem(cur);else openStars()};
+$('bCopy').onclick=function(){var txt=starRows.map(function(r){var s=st.stars[r[0]]||{};return r[0]+'\t'+name(r[6])+'\t'+r[1]+'\t'+(s.by||'')}).join('\n');if(navigator.clipboard)navigator.clipboard.writeText(txt).then(function(){alert('Список скопирован')},function(){prompt('Скопируй список:',txt)});else prompt('Скопируй список:',txt)};
+$('lbStar').onclick=function(){toggleStar(curList[lbIndex])};
+$('lbSend').onclick=function(){var r=curList[lbIndex],text=$('lbNote').value.trim();if(!r||!text)return;var id=r[0],b=$('lbSend');b.disabled=true;
+  flush().then(function(){return api('/api/skins-admin/ops',{method:'POST',body:JSON.stringify({ops:[{op:'note',id:id,text:text}]})})}).then(function(x){ver=x.version;base=fromServer(x.state);st=clone(base);$('lbNote').value='';b.disabled=false;setSync(stamp(x.by,x.updated),'ok');lbDraw();draw()}).catch(function(e){b.disabled=false;setSync('заметка не ушла: '+e.message,'bad')})};
 $('bLog').onclick=function(){$('lList').innerHTML='<div class="hint">Загрузка…</div>';$('ld').showModal();api('/api/skins-admin/log').then(function(r){var h='';r.log.forEach(function(x){var d=new Date(x.at*1000);h+='<div style="padding:7px 0;border-bottom:1px solid var(--line)"><b>'+esc(x.by)+'</b> <span class="stat">'+d.toLocaleDateString('ru')+' '+d.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+'</span><br>'+esc(x.text)+'</div>'});$('lList').innerHTML=h||'<div class="hint">Пока пусто</div>'}).catch(function(e){$('lList').innerHTML='<div class="hint">Не получилось: '+esc(e.message)+'</div>'})};
 $('lClose').onclick=function(){$('ld').close()};
 $('bReset').onclick=function(){if(confirm('Очистить все отметки?')){st={hid:{},vip:{},allowed:{},perms:st.perms,hideUn:false};save();bulkLabel();draw()}};

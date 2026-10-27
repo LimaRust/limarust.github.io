@@ -88,6 +88,7 @@ dialog textarea{width:100%;height:240px;background:var(--bg);color:var(--text);b
       <button id="bHideUn">Скрыть все неодобренные в предмете</button>
       <button id="bShowAll">Показать всё в предмете</button>
       <button id="bHideUnAll" class="warn">Скрыть неодобренные во ВСЕХ предметах</button>
+      <button id="bHideAll" class="warn"></button>
     </div>
     <div id="starBar" class="bar" style="display:none"><b>Общий список</b> <span class="stat">то, что вы с другом сохранили, чтобы обсудить; в большой картинке можно писать заметки</span><span class="grow"></span><span id="starWho" class="stat"></span><select id="starFilter"><option value="all">Все</option><option value="me">Сохранил я</option><option value="other">Сохранил друг</option></select><button id="bCopy">Скопировать список</button></div>
     <div id="grid" class="grid"></div>
@@ -118,10 +119,10 @@ var starView=false,starRows=[],items={}, order=[], counts={}, cache={}, cur='', 
 var API=location.hostname==='127.0.0.1'?location.origin:'https://lima-rust-api.lima-backend.workers.dev',TOKEN_KEY='lima-skins-token';
 var token='',who='',ver=-1,sending=false,timer=0,serverSet={};
 try{token=localStorage.getItem(TOKEN_KEY)||''}catch(e){}
-function emptySt(){return {hid:{},vip:{},allowed:{},who:{},stars:{},perms:[{id:'limaskins.vip',name:'VIP'}],hideUn:false,hideUnBy:''}}
+function emptySt(){return {hid:{},vip:{},allowed:{},who:{},stars:{},perms:[{id:'limaskins.vip',name:'VIP'}],hideUn:false,hideAll:false,hideUnBy:''}}
 function clone(o){return JSON.parse(JSON.stringify(o))}
 var st=emptySt(),base=emptySt();
-function fromServer(s){var o=emptySt();(s.hidden||[]).forEach(function(i){o.hid[i]=1});(s.allowed||[]).forEach(function(i){o.allowed[i]=1});o.vip=s.vip||{};if(s.perms&&s.perms.length)o.perms=s.perms;o.hideUn=!!s.hideUn;o.who=s.who||{};o.stars=s.stars||{};o.hideUnBy=s.hideUnBy||'';return o}
+function fromServer(s){var o=emptySt();(s.hidden||[]).forEach(function(i){o.hid[i]=1});(s.allowed||[]).forEach(function(i){o.allowed[i]=1});o.vip=s.vip||{};if(s.perms&&s.perms.length)o.perms=s.perms;o.hideUn=!!s.hideUn;o.hideAll=!!s.hideAll;o.who=s.who||{};o.stars=s.stars||{};o.hideUnBy=s.hideUnBy||'';return o}
 function diffOps(a,b){
   var ops=[],on=[],off=[],al=[],un=[];
   Object.keys(b.hid).forEach(function(i){if(!a.hid[i])on.push(i)});Object.keys(a.hid).forEach(function(i){if(!b.hid[i])off.push(i)});
@@ -132,6 +133,7 @@ function diffOps(a,b){
   a.perms.forEach(function(p){if(!b.perms.some(function(x){return x.id===p.id}))ops.push({op:'perm.del',id:p.id})});
   Object.keys(b.stars).forEach(function(i){if(!a.stars[i])ops.push({op:'star',id:i,item:b.stars[i].item,on:true})});Object.keys(a.stars).forEach(function(i){if(!b.stars[i])ops.push({op:'star',id:i,on:false})});
   if(a.hideUn!==b.hideUn)ops.push({op:'hideUn',on:b.hideUn});
+  if(a.hideAll!==b.hideAll)ops.push({op:'hideAll',on:b.hideAll});
   return ops;
 }
 function applyLocal(s,ops){ops.forEach(function(o){
@@ -141,6 +143,7 @@ function applyLocal(s,ops){ops.forEach(function(o){
   else if(o.op==='perm.add'){if(!s.perms.some(function(x){return x.id===o.id}))s.perms.push({id:o.id,name:o.name})}
   else if(o.op==='perm.del'){s.perms=s.perms.filter(function(x){return x.id!==o.id});Object.keys(s.vip).forEach(function(i){if(s.vip[i]===o.id)delete s.vip[i]})}
   else if(o.op==='star'){if(o.on)s.stars[o.id]={by:who,item:o.item||'',at:0,notes:[]};else delete s.stars[o.id]}
+  else if(o.op==='hideAll')s.hideAll=o.on;
   else if(o.op==='hideUn')s.hideUn=o.on})}
 function setSync(text,cls){var e=$('sync');e.textContent=text;e.style.color=cls==='bad'?'var(--orange)':cls==='ok'?'var(--lime)':'var(--mute)'}
 function stamp(by,updated){return 'сохранено · версия '+ver+(by?' · последним менял: '+by:'')+(updated?' ('+new Date(updated*1000).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'})+')':'')}
@@ -182,7 +185,7 @@ function startAuth(){
 function $(i){return document.getElementById(i)}
 function starCounts(){var c={};Object.keys(st.stars).forEach(function(i){var b=st.stars[i].by||'?';c[b]=(c[b]||0)+1});return c}
 function stats(){$('starN').textContent=Object.keys(st.stars).length;var sc=starCounts();$('starWho').innerHTML=Object.keys(sc).map(function(n){return '<span class="'+(n===who?'mine':'other')+'">'+esc(n)+(n===who?' (я)':'')+': <b>'+sc[n]+'</b></span>'}).join(' · ');$('sHid').textContent=Object.keys(st.hid).length;$('sVip').textContent=Object.keys(st.vip).length}
-function isHid(r){var id=r[0];return !!st.hid[id]||(st.hideUn&&!serverSet[id]&&!st.allowed[id])}
+function isHid(r){var id=r[0];return !!st.hid[id]||st.hideAll&&!st.allowed[id]||(st.hideUn&&!serverSet[id]&&!st.allowed[id])}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function get(u){return fetch(u).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
 
@@ -246,7 +249,7 @@ function draw(){
     h+='<div class="card'+(hid?' hid':'')+(vip?' vip':'')+'" data-id="'+id+'" data-i="'+(page*PER+i)+'">'+
       '<div class="thumb" data-open="1" style="cursor:zoom-in;'+(img?'background-image:url('+img+')':'')+'"><span class="badge'+(r[3]?'':' no')+'">'+(r[3]?'✓ одобрен':'⚠ не одобрен')+'</span><span class="subs">★ '+r[4]+'</span><button class="fav'+(st.stars[id]?' on':'')+'" data-fav="'+id+'" title="В общий список">'+(st.stars[id]?'★':'☆')+'</button></div>'+
       '<div class="meta"><div class="title"><a target="_blank" rel="noopener" href="https://steamcommunity.com/sharedfiles/filedetails/?id='+id+'">'+esc(r[1])+'</a></div><div class="id">Предмет: <b>'+esc(name(cur))+'</b></div><div class="id">'+id+(vip?' · 🔒 '+esc(permName(vip)):'')+'</div>'+(st.who[id]?'<div class="id">отметил: <b>'+esc(st.who[id])+'</b></div>':'')+(st.stars[id]?'<div class="id">★ сохранил: <b class="'+(st.stars[id].by===who?'mine':'other')+'">'+esc(st.stars[id].by)+(st.stars[id].by===who?' (я)':'')+'</b>'+((st.stars[id].notes||[]).length?' · 💬 '+st.stars[id].notes.length:'')+'</div>':'')+
-      '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">'+(vip?esc(permName(vip)):'Привилегия')+'</button>'+(st.hideUn&&!serverSet[id]?'<button data-a="allow" class="'+(st.allowed[id]?'vipon':'')+'">'+(st.allowed[id]?'Разрешён':'Разрешить')+'</button>':'')+'</div></div></div>';
+      '<div class="acts"><button data-a="hid" class="'+(hid?'on':'')+'">'+(hid?'Скрыт':'Скрыть')+'</button><button data-a="vip" class="'+(vip?'vipon':'')+'">'+(vip?esc(permName(vip)):'Привилегия')+'</button>'+((st.hideUn&&!serverSet[id])||st.hideAll?'<button data-a="allow" class="'+(st.allowed[id]?'vipon':'')+'">'+(st.allowed[id]?'Разрешён':'Разрешить')+'</button>':'')+'</div></div></div>';
   });
   $('grid').innerHTML=h||'<div class="hint">Ничего не найдено</div>';
   $('pInfo').textContent=(page+1)+' / '+pages+' · '+list.length+' скинов';
@@ -296,7 +299,9 @@ $('bHideUnAll').onclick=function(){
   if(!st.hideUn&&!confirm('Включить правило: скрыть ВСЕ скины, которых нет в списке одобренных игрой? Исключения можно сделать кнопкой «Разрешить».'))return;
   st.hideUn=!st.hideUn;save();bulkLabel();draw();
 };
-function bulkLabel(){$('bHideUnAll').textContent=st.hideUn?'Правило «скрыть все неодобренные»: ВКЛ':'Правило «скрыть все неодобренные»: ВЫКЛ'}
+function bulkLabel(){$('bHideAll').textContent=st.hideAll?'Правило «убрать ВСЕ скины воркшопа»: ВКЛ':'Правило «убрать ВСЕ скины воркшопа»: ВЫКЛ';
+  $('bHideUnAll').textContent=st.hideUn?'Правило «скрыть все неодобренные»: ВКЛ':'Правило «скрыть все неодобренные»: ВЫКЛ'}
+$('bHideAll').onclick=function(){if(!st.hideAll&&!confirm('Убрать из /skin ВСЕ скины воркшопа, в том числе одобренные? Исключения: кнопка «Разрешить».'))return;st.hideAll=!st.hideAll;save();bulkLabel();draw()};
 bulkLabel();
 
 function dialog(title,text,ok){$('dTitle').textContent=title;$('dText').value=text;$('dOk').onclick=function(){$('dlg').close();if(ok)ok($('dText').value)};$('dlg').showModal()}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лимонный ивент · Lima Rust</title>
+<meta name="description" content="Лимончики по всей карте: собери больше всех и получи приз. Время и таблица ивента Lima Rust.">
+<style>
+:root{--bg:#171a12;--panel:#212519;--panel2:#2a2f20;--line:#343a28;--lime:#d4e85a;--limed:#1b2108;--orange:#f29a3c;--text:#f0f2e4;--mute:#98a088;--dim:#6b7455}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center}
+header a{color:var(--lime);text-decoration:none;font-weight:700}
+h1{font-size:18px;margin:0}h1 b{color:var(--lime)}h1 i{font-style:normal;color:var(--orange)}
+main{max-width:860px;margin:0 auto;padding:18px 16px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+.big{font-size:44px;font-weight:800;letter-spacing:1px}
+.on{color:var(--lime)}.off{color:var(--mute)}
+.stat{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--dim);font-size:12px;text-transform:uppercase}
+tr:first-child td{font-weight:700}
+.place{width:44px;color:var(--orange);font-weight:800}
+.top1 .place{color:var(--lime)}
+button,input{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 16px}
+button{cursor:pointer;font-weight:700}button:hover{border-color:var(--lime)}
+button.pri{background:var(--lime);color:var(--limed);border-color:var(--lime)}
+button.warn{background:#3a2420;border-color:#6a3a32}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input[type=number]{width:90px}
+.note{margin-top:10px;min-height:1.3em;color:var(--lime);font-size:13px}
+</style>
+</head>
+<body>
+<header><a href="../">‹ На сайт</a><h1><b>Lima</b> <i>Rust</i> · лимонный ивент</h1></header>
+<main>
+  <div class="card">
+    <div id="state" class="big off">Ивент сейчас не идёт</div>
+    <div id="sub" class="stat">Следи за новостями в Discord: когда ивент начнётся, тут появится таймер и таблица.</div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Таблица</h3>
+    <table id="tbl"><thead><tr><th>#</th><th>Игрок</th><th>Лимончиков</th></tr></thead><tbody id="rows"><tr><td colspan="3" class="stat">Пока пусто</td></tr></tbody></table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Как играть</h3>
+    <p style="margin:0">Пока ивент идёт, по карте появляются <b>лимончики</b>. Подбирай их с земли: засчитываются только те, что выложил ивент. Кто соберёт больше всех, получает приз, награды ещё получают второе и третье место. Таблица в игре: <b>/lemon</b>.</p>
+  </div>
+
+  <div id="admin" class="card" style="display:none">
+    <h3 style="margin-top:0">Управление (только для админов)</h3>
+    <div class="row">
+      <label class="stat">Минут: <input id="mins" type="number" min="1" max="600" value="30"></label>
+      <button id="bStart" class="pri">Запустить ивент</button>
+      <button id="bStop" class="warn">Остановить и выдать призы</button>
+    </div>
+    <div id="note" class="note"></div>
+  </div>
+</main>
+<script>
+(function(){
+'use strict';
+var API=location.hostname==='127.0.0.1'?location.origin:'https://lima-rust-api.lima-backend.workers.dev';
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function token(){try{return localStorage.getItem('lima_token')||''}catch(e){return ''}}
+var endsAt=0,active=false;
+
+function mmss(sec){sec=Math.max(0,sec|0);return Math.floor(sec/60)+':'+('0'+sec%60).slice(-2)}
+function tick(){
+  if(!active){return}
+  var left=endsAt-Math.floor(Date.now()/1000);
+  if(left<=0){active=false;$('state').className='big off';$('state').textContent='Ивент закончился';return}
+  $('state').textContent='Идёт: осталось '+mmss(left);
+}
+function load(){
+  fetch(API+'/api/event',{cache:'no-store'}).then(function(r){return r.json()}).then(function(s){
+    active=!!s.active;endsAt=s.active?Math.floor(Date.now()/1000)+s.left:0;
+    if(active){$('state').className='big on';$('sub').textContent=(s.by?'Запустил: '+s.by+' · ':'')+'длится '+(s.minutes||'?')+' мин. Подбирай лимончики на карте.';tick()}
+    else{$('state').className='big off';$('state').textContent='Ивент сейчас не идёт';$('sub').textContent=(s.top&&s.top.length?'Итоги прошлого ивента ниже. ':'')+'Следи за новостями в Discord: когда ивент начнётся, тут появится таймер.'}
+    var h='';(s.top||[]).forEach(function(p,i){h+='<tr class="'+(i===0?'top1':'')+'"><td class="place">'+(i+1)+'</td><td>'+esc(p.n)+'</td><td>'+p.s+'</td></tr>'});
+    $('rows').innerHTML=h||'<tr><td colspan="3" class="stat">Пока пусто</td></tr>';
+  }).catch(function(){$('sub').textContent='Не удалось получить данные ивента.'});
+}
+setInterval(tick,1000);setInterval(load,10000);load();
+
+// the admin panel is shown only to a signed-in site admin
+if(token()){
+  fetch(API+'/api/me',{headers:{Authorization:'Bearer '+token()}}).then(function(r){return r.ok?r.json():null}).then(function(me){if(me&&me.role==='admin')$('admin').style.display='block'}).catch(function(){});
+}
+function control(action){
+  var n=$('note');n.textContent='Отправляю команду…';
+  fetch(API+'/api/event/control',{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},body:JSON.stringify({action:action,minutes:+$('mins').value||30})}).then(function(r){
+    if(r.status===403){n.textContent='Нет прав: войди на сайте как админ.';return}
+    if(!r.ok){n.textContent='Не получилось отправить.';return}
+    n.textContent='Команда отправлена, сервер выполнит её в течение нескольких секунд.';setTimeout(load,6000);setTimeout(load,14000);
+  }).catch(function(){n.textContent='Нет связи с сервером.'});
+}
+$('bStart').onclick=function(){control('start')};
+$('bStop').onclick=function(){if(confirm('Остановить ивент сейчас и выдать призы?'))control('stop')};
+})();
+</script>
+</body>
+</html>

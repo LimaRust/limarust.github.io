@@ -25,7 +25,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lima Rust — сервер Rust с китами, магазином и рулеткой">
 <meta name="twitter:image" content="https://limarust.github.io/img/og.png">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Lima Rust","alternateName":["LimaRust","Lima Rust сервер"],"url":"https://limarust.github.io/","inLanguage":["ru","en"]}</script>
+<meta name="application-name" content="Lima Rust">
+<meta name="apple-mobile-web-app-title" content="Lima Rust">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://limarust.github.io/#site","name":"Lima Rust","alternateName":["LimaRust","Lima Rust server","Lima Rust сервер"],"url":"https://limarust.github.io/","inLanguage":["ru","en"],"publisher":{"@id":"https://limarust.github.io/#org"}},{"@type":"Organization","@id":"https://limarust.github.io/#org","name":"Lima Rust","alternateName":"LimaRust","url":"https://limarust.github.io/","logo":"https://limarust.github.io/img/og.png","sameAs":["https://discord.gg/fVWnrjjS5u","https://t.me/LimaRust"]},{"@type":"GameServer","name":"Lima Rust","description":"Community server of the survival game Rust (Facepunch): Vanilla+, 2x rates, teams up to 5, kits, ranks and wipes.","url":"https://limarust.github.io/","game":{"@type":"VideoGame","name":"Rust","publisher":{"@type":"Organization","name":"Facepunch Studios"}}}]}</script>
 <title>Lima Rust — сервер Rust: киты, магазин, вайпы</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap">
@@ -115,11 +117,16 @@ section{padding-block:64px}
 .card:hover>.emb{transform:scale(1.04)}
 .grp{font:700 24px var(--f-px);margin:30px 0 16px;color:var(--lime)}
 .khero{display:flex;gap:22px;align-items:center;margin:22px 0}.khero .emb{width:110px;flex:none;margin:0}.kh2{margin:0 0 6px;font:700 30px var(--f-px);color:var(--lime)}
+.bcols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}.bcol{background:#171a12;border:1px solid var(--line);border-radius:16px;padding:16px}.bcol h3{margin:0 0 4px;font:700 20px var(--f-px)}.bcol h3 span{font:600 14px var(--f-ui);color:var(--dim)}.bcol.c0 h3{color:#e0503a}.bcol.c1 h3{color:var(--orange)}.bcol.c2 h3{color:var(--lime)}.bcol>p{margin:0 0 12px;font-size:13px}.bl{display:grid;gap:8px}.bkc{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--panel2);border-radius:12px;border-left:4px solid #e0503a}.bkc.c1{border-color:var(--orange)}.bkc.c2{border-color:var(--lime)}.bkc img{width:48px;height:48px;object-fit:contain;flex:none}.bkc b{font-size:15px}.bkc .bt{font:700 15px var(--f-ui);font-variant-numeric:tabular-nums;color:#e0503a}.bkc.c1 .bt{color:var(--orange)}.bkc.c2 .bt{color:var(--lime)}.bkc small{color:var(--dim);font-size:12px}@media(max-width:860px){.bcols{grid-template-columns:1fr}}
+.wkw{margin:0 0 6px;padding-left:20px;display:grid;gap:2px}.wkw li.wk-event{color:var(--orange)}.wkw li.wk-npc{color:#e0503a}
 .kchips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 20px}
-.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.kt{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;text-align:center}
-.kt img{width:76px;height:76px;object-fit:contain}.kt b{font-size:14px;line-height:1.25}.kt small{color:var(--dim);font-size:12px}
-.kt .kq{position:absolute;top:8px;right:10px;font:700 15px var(--f-px);color:var(--orange)}
+.kpanel{background:#171a12;border:1px solid var(--line);border-radius:18px;padding:22px 24px 26px;margin-top:6px}
+.kpanel .khero{margin:0 0 16px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.klbl{font:700 13px var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.kt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px 12px;background:var(--panel2);border-radius:12px;text-align:center}
+.kt img{width:72px;height:72px;object-fit:contain}.kt b{font:600 13px/1.25 var(--f-ui);color:var(--text,#e8ecd8)}.kt small{color:var(--dim);font-size:11px}
+.kt .kq{font:700 14px var(--f-ui);color:var(--lime)}
 @media(max-width:560px){.khero{flex-direction:column;text-align:center}.kgrid{grid-template-columns:repeat(2,1fr)}}
 .blk{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .bk{padding:14px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;border-color:var(--line);transition:border-color .3s}
@@ -271,6 +278,12 @@ iframe.ayt{border:0}
 .tgc:hover{border-color:var(--lime);transform:translateY(-1px)}.tgc img,.tgc .tsw{width:34px;height:34px;flex:none;object-fit:contain;border-radius:6px}
 .tgt{min-width:0;display:block}.tgc b{display:block;font-size:13px;line-height:1.2}.tgc small{display:block;color:var(--mute);font-size:11.5px;white-space:nowrap}
 .tsw{display:inline-block;box-shadow:inset 0 -4px 0 rgba(0,0,0,.3),inset 0 3px 0 rgba(255,255,255,.18)}
+/* Building tier textures drawn in CSS: straw, planks, bricks, steel plate, armored plate. */
+.tsw.t-twig{background:repeating-linear-gradient(115deg,#e0a23c 0 5px,#c27f24 5px 8px,#f0b957 8px 10px)!important}
+.tsw.t-wood{background:repeating-linear-gradient(0deg,#8a5528 0 9px,#5e3716 9px 11px),#7a4a22!important;background-blend-mode:multiply}
+.tsw.t-stone{background:linear-gradient(90deg,transparent 48%,#5f625a 48% 52%,transparent 52%),repeating-linear-gradient(0deg,#a7a89e 0 10px,#6f7168 10px 12px)!important}
+.tsw.t-metal{background:radial-gradient(circle at 20% 20%,#cfe0ee 0 2px,transparent 3px),radial-gradient(circle at 80% 80%,#cfe0ee 0 2px,transparent 3px),linear-gradient(135deg,#8fa5b8,#5f7487)!important}
+.tsw.t-toptier{background:radial-gradient(circle at 20% 20%,#9aa3ad 0 2px,transparent 3px),radial-gradient(circle at 80% 80%,#9aa3ad 0 2px,transparent 3px),linear-gradient(135deg,#4a525c,#272c33)!important}
 .tbase{display:grid;gap:8px}
 .brow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--panel2);border:1px solid var(--lime)}
 .brow img,.brow .tsw{width:36px;height:36px;object-fit:contain;border-radius:6px}.brow b{flex:1;min-width:130px}
@@ -630,7 +643,7 @@ const DEFAULT=()=>({
  kits:[['Discord','free','Дерево x500, Камень x300, Металл x100, Бинты x5. Нужна привязка Discord',86400,0,'kit-discord'],['Старт','free','Каменный топор, Бинты x3, Яблоки x5',3600,0,'kit-starter'],['Гость','free','Пистолет, Патроны x32, Аптечка',86400,0,'kit-guest'],['Еда','free','Бобы x5, Яблоки x10, Рыба x5, Мясо x5',7200,0,'kit-food'],['Медик','free','Шприцы x5, Бинты x10, Аптечки x2, Антирад x3',14400,0,'kit-medic'],['Ресурсы','free','Дерево x1000, Камень x500, Металл x200, Сера x100',7200,0,'kit-resources'],['Строитель','free','Молоток, Дверь, Металл x2000, Дерево x1000',14400,3600,'kit-builder'],['Оружие','free','Томпсон, Полуавтомат, Патроны x64, Шлем',28800,7200,'kit-weapons'],['Луки','free','Лук, Арбалет, Стрелы x32, Стрелы HV x16',14400,0,'kit-bows'],['Инструменты','free','Кирка, Топор, Молоток, Бензопила',28800,3600,'kit-tools'],['VIP','prem','АК-47, Шлем, Аптечки x5',86400,0,'vip'],['VIP+','prem','АК-47, Бронежилет, Аптечки x10, Патроны x128',86400,0,'vip-plus'],['VIP++','prem','АК-47, Бронежилет, Шлем, Патроны x256',86400,0,'vip-plus-plus'],['MVP','prem','LR-300, Бронежилет, Аптечки x10',86400,0,'mvp'],['MVP+','prem','LR-300, Бронежилет, Шлем, Патроны x256',86400,0,'mvp-plus'],['MVP++','prem','LR-300, Тяжёлая броня, Патроны x512',86400,0,'mvp-plus-plus'],['VIP God','prem','Болтовка, Тяжёлая броня, C4 x2',86400,0,'vip-god'],['VIP God+','prem','Болтовка, Тяжёлая броня, C4 x4',86400,0,'vip-god-plus'],['VIP God++','prem','Болтовка, Ракетница, C4 x8, Хазмат',86400,0,'vip-god-plus-plus']].map(([n,type,items,use,wipe,img])=>({n,type,items,use,wipe,img,on:true})),
  rules:[
   {c:'Общие',r:[['Уважай игроков','Оскорбления, угрозы и травля запрещены.'],['Один аккаунт на человека','Мультиаккаунты для обхода наказаний запрещены.'],['Каждый сам за себя','Помощи и делёжки нет. Передать предмет можно через /trade.'],['Не рекламируй другие серверы','Ссылки и названия чужих серверов запрещены.'],['Следуй указаниям админов','Спорные ситуации решаются в тикете Discord.']]},
-  {c:'Команды',r:[['Лимит команды: 4 игрока','Максимум 4 человека на базе и в рейдах.'],['Альянсы разрешены','В альянсе до 3 команд, в каждой не больше 4 человек.'],['Союзы записываются','Союз можно объявить в чате команды.']]},
+  {c:'Команды',r:[['Лимит команды: 5 игроков','Максимум 5 человек на базе и в рейдах.'],['Альянсы разрешены','В альянсе до 3 команд, в каждой не больше 5 человек.'],['Союзы записываются','Союз можно объявить в чате команды.']]},
   {c:'Чат',r:[['Без флуда и капса','Одно сообщение не чаще раза в 3 секунды.'],['Без политики и оскорблений','Чат для игры, а не для споров.'],['Язык общения','Русский или английский, чтобы все понимали.']]},
   {c:'Читы и баги',r:[['Читы запрещены','Бан без возможности обжалования.'],['Макросы и скрипты запрещены','Любая автоматизация действий недопустима.'],['Сообщай о багах','Нашёл баг: напиши в Discord, а не используй его.']]},
   {c:'Наказания',r:[['Предупреждение','Первое лёгкое нарушение.'],['Мут и временный бан','Повторные нарушения.'],['Постоянный бан','Читы, мультиаккаунты, злоупотребление багами.'],['Не согласен с решением?','Создай тикет в Discord, администрация разберётся.']]}
@@ -672,9 +685,28 @@ const enRules=()=>{if(ENRE)return ENRE;const esc2=k=>k.replace(/[.*+?^${}()|[\]\
  ENRE=Object.keys(EN).sort((a,b)=>b.length-a.length).map(k=>[new RegExp((/^[А-Яа-яЁё]/.test(k)?'(?<![А-Яа-яЁё])':'')+esc2(k)+(/[А-Яа-яЁё]$/.test(k)?'(?![А-Яа-яЁё])':''),'g'),EN[k]]);return ENRE};
 const ENPAT=[[/(\d+(?:[.,]\d+)?) ч(?![А-Яа-яЁё])/g,'$1 h'],[/(?<![А-Яа-яЁё])от (\d+) h/g,'from $1 h'],[/(?<![А-Яа-яЁё])до «([^»]+)»: /g,'to “$1”: ']];
 const trText=s=>{if(LANG!=='en'||!/[А-Яа-яЁё]/.test(s))return s;let o=s;for(const [re,v] of ENPAT)o=o.replace(re,v);if(!/[А-Яа-яЁё]/.test(o))return o;for(const [re,v] of enRules()){if(re.test(o)){re.lastIndex=0;o=o.replace(re,()=>v)}re.lastIndex=0}return o};
+Object.assign(EN,{'Что внутри':'What\'s inside','← Все киты':'← All kits','Посмотреть состав':'View contents','Оформить подписку':'Subscribe','Условия доната':'Donate terms','Другие киты':'Other kits','Оружие':'Weapons','Инструменты':'Tools','Снаряжение':'Gear','Взрывчатка':'Explosives','Боеприпасы':'Ammo','Одежда и броня':'Clothing and armor','Медицина':'Medical','Ресурсы':'Resources','Еда и вода':'Food and water','Постройка':'Building','Прочее':'Other','Все':'All','Заблокировано':'Locked','Скоро откроется':'Opening soon','Разблокировано':'Unlocked','Доступно':'Available','Пояс':'Belt','Надето':'Worn','Рюкзак':'Backpack','Открыт с':'Opened','Откроется:':'Opens:','Ещё закрыто, больше часа':'Still locked, over an hour left','Меньше часа до открытия':'Less than an hour to open','Можно крафтить и использовать':'Can be crafted and used','Пусто.':'Empty.','Премиум кит':'Premium kit','Бесплатный кит':'Free kit','игроков в команде':'players per team','Подписки':'Subscriptions','Вступить':'Join','Отменить':'Cancel','Не продлевать':'Stop renewing','Для себя':'For myself','Для клана (до 5 человек)':'For a clan (up to 5)','Срок':'Period','Для кого':'For whom','На человека':'Per person','Итого за срок':'Total for the period','Оформить':'Subscribe','Закрыть':'Close'});/* Texts the phrase list does not know (kit names, perks, news, wishes) are translated by the Worker once and cached. */
+const AIT=(()=>{try{return JSON.parse(localStorage.getItem('lima_tr_en')||'{}')}catch(e){return {}}})();
+const aiQ=new Map();let aiTimer=0;
+const aiKey=s=>s.replace(/\s+/g,' ').trim();
+function aiNode(n,orig){const p=n.parentElement;if(!p||p.closest('#tb,.me,.pinfo,[data-notr],#dr'))return;
+ const key=aiKey(orig);if(key.length<2||key.length>400)return;
+ const pre=orig.match(/^\s*/)[0],post=orig.match(/\s*$/)[0];
+ if(AIT[key]){n.nodeValue=pre+AIT[key]+post;return}
+ if(!aiQ.has(key))aiQ.set(key,[]);aiQ.get(key).push({n,pre,post});clearTimeout(aiTimer);aiTimer=setTimeout(aiFlush,250)}
+async function aiFlush(){if(!apiOn()||LANG!=='en')return;const keys=[...aiQ.keys()].slice(0,40);if(!keys.length)return;
+ try{const r=await api('/api/i18n',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:'en',texts:keys})});
+  Object.assign(AIT,r.tr||{});
+  try{const all=Object.keys(AIT);if(all.length>1500)all.slice(0,500).forEach(x=>delete AIT[x]);localStorage.setItem('lima_tr_en',JSON.stringify(AIT))}catch(e){}
+  keys.forEach(k=>{const list=aiQ.get(k)||[];aiQ.delete(k);const t=AIT[k];if(t)list.forEach(x=>{if(x.n.isConnected)x.n.nodeValue=x.pre+t+x.post})})}
+ catch(e){keys.forEach(k=>aiQ.delete(k));return}
+ if(aiQ.size)aiFlush()}
+/* Item names in English come from the wiki list, loaded on demand. */
+var WIKIEN=null;
+function enItem(s,ru){if(LANG!=='en')return ru;if(WIKIEN)return WIKIEN[s]||ru;if(WIKIEN===null){WIKIEN=false;fetch('wiki.json').then(r=>r.json()).then(j=>{const m={};(j.items||[]).forEach(i=>m[i.s]=i.n);WIKIEN=m;if(document.getElementById('main'))renderSite()}).catch(()=>{})}return ru}
 function applyLang(root=document.body){if(LANG!=='en'||!root)return;
  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>/[А-Яа-яЁё]/.test(n.nodeValue)&&!n.parentElement.closest('script,style,#dr')?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
- const nodes=[];while(w.nextNode())nodes.push(w.currentNode);nodes.forEach(n=>{n.nodeValue=trText(n.nodeValue)});
+ const nodes=[];while(w.nextNode())nodes.push(w.currentNode);nodes.forEach(n=>{const orig=n.nodeValue,t=trText(orig);if(!/[А-Яа-яЁё]/.test(t)){n.nodeValue=t;return}n.nodeValue=t;aiNode(n,orig)});
  root.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(e=>{if(e.closest('#dr'))return;for(const a of ['placeholder','title','aria-label','alt']){const v=e.getAttribute(a);if(v&&/[А-Яа-яЁё]/.test(v))e.setAttribute(a,trText(v))}})}
 function setLang(l){LANG=l;try{localStorage.setItem('lima_lang',l)}catch(e){}setNames();document.documentElement.lang=l;closeM();renderSite()}
 const fmt=s=>{s=Math.max(0,s|0);const d=s/86400|0,h=s%86400/3600|0,m=s%3600/60|0,x=s%60;return (d?d+(LANG==='en'?'d ':'д '):'')+(d||h?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')};
@@ -744,7 +776,7 @@ function pollBlock(){const d=LIVE.pollData,p=d&&d.poll;
  return `<div style="display:grid;gap:12px;align-content:start">${head}${cards}<p class="note" style="margin:0">${when}${ACC?'':' Чтобы голосовать, войди через Steam или Google.'}</p>${nextMapNote(d)}</div>`}
 const nextMapNote=d=>d&&d.nextMap?`<p class="note" style="margin:0;color:var(--lime)">Следующая карта: ${esc(d.nextMap.label||'')} ${d.nextMap.seed?'Seed '+d.nextMap.seed+' · '+d.nextMap.size:''}</p>`:'';
 const SEC={
-home(){const w=nextWipes(1)[0];return `<section class="hero" id="home"><canvas id="cv"></canvas><div class="wrap"><div>${LEMON(96)}</div><h1>${wm(C.name)}</h1><p class="lead">Сервер Rust с лимонным настроением: честный вайп, свои киты, ранги за время и рулетка раз в день.</p><div class="chips"><span class="chip">${esc(C.region)}</span><span class="chip">${esc(C.rates)}</span><span class="chip">${esc(C.type)}</span></div><div class="ipbox"><span>connect ${esc(C.ip)}</span><button data-cp="${esc(C.ip)}">Копировать</button></div><div class="cta"><a class="btn pri" href="steam://connect/${esc(C.ip)}">Играть сейчас</a>${ACC?'':'<button class="btn" data-login>Войти</button>'}<a class="btn" href="#discord">Сообщество</a></div><div class="stats"><div class="card stat" id="onlCard">${onlHtml()}</div><div class="card stat">${wipeDev()?'<b style="font-size:20px">В разработке</b>':`<b data-end="${w?w.ts:0}" data-fmt="d">—</b>`}<span>до вайпа</span></div><div class="card stat"><b>${C.mapSize}</b><span>размер карты</span></div><div class="card stat"><b>4</b><span>игрока в команде</span></div></div></div></section>${C.promo.on?`<div class="band"><div class="wrap"><b>АКЦИЯ</b><span>${esc(C.promo.text)}</span><a class="btn" href="#donate">Подробнее</a></div></div>`:''}`},
+home(){const w=nextWipes(1)[0];return `<section class="hero" id="home"><canvas id="cv"></canvas><div class="wrap"><div>${LEMON(96)}</div><h1>${wm(C.name)}</h1><p class="lead">Сервер Rust с лимонным настроением: честный вайп, свои киты, ранги за время и рулетка раз в день.</p><div class="chips"><span class="chip">${esc(C.region)}</span><span class="chip">${esc(C.rates)}</span><span class="chip">${esc(C.type)}</span></div><div class="ipbox"><span>connect ${esc(C.ip)}</span><button data-cp="${esc(C.ip)}">Копировать</button></div><div class="cta"><a class="btn pri" href="steam://connect/${esc(C.ip)}">Играть сейчас</a>${ACC?'':'<button class="btn" data-login>Войти</button>'}<a class="btn" href="#discord">Сообщество</a></div><div class="stats"><div class="card stat" id="onlCard">${onlHtml()}</div><div class="card stat">${wipeDev()?'<b style="font-size:20px">В разработке</b>':`<b data-end="${w?w.ts:0}" data-fmt="d">—</b>`}<span>до вайпа</span></div><div class="card stat"><b>${C.mapSize}</b><span>размер карты</span></div><div class="card stat"><b>5</b><span>игроков в команде</span></div></div></div></section>${C.promo.on?`<div class="band"><div class="wrap"><b>АКЦИЯ</b><span>${esc(C.promo.text)}</span><a class="btn" href="#donate">Подробнее</a></div></div>`:''}`},
 cabinet(){if(!ACC)return '';const ri=rankOf(ACC.hours),r=C.ranks[ri],nx=C.ranks[ri+1];const pct=nx?Math.round((ACC.hours-r.h)/(nx.h-r.h)*100):100;const sw=sinceWipe();const w=nextWipes(1)[0];const adm=ACC.role==='admin',hasP=ACC.priv&&ACC.priv!=='—';
  const kits=C.kits.filter(k=>k.on).map((k,i)=>{const end=((ACC.kits||{})[k.n]||0)*1000,wl=Math.max(0,(+k.wipe||0)-sw),left=(end-Date.now())/1000;let st;if(k.type==='prem'&&!hasP)st='<b class="mut">Нужна привилегия</b>';else if(wl>0)st=`<b class="wt">После вайпа <span data-end="${Date.now()+wl*1000}">${fmt(wl)}</span></b>`;else if(left>0)st=`<b class="wt">Через <span data-end="${end}">${fmt(left)}</span></b>`;else st='<b class="ok">Доступен</b>';return `<div class="kr"><span>${esc(k.n)}</span>${st}</div>`}).join('');
  const pd=LIVE.pollData&&LIVE.pollData.poll,po=pd&&pd.myVote!=null?pd.options[pd.myVote]:null,mv=po?(po.label||'Карта '+(pd.myVote+1)):null;
@@ -778,11 +810,16 @@ rules(){const cats=[...C.rules.map(x=>x.c),'Команды'];const q=(RV.q||'').
 top(){const th=(k,n)=>`<th><button class="lk${TOPSORT===k?' on':''}" data-ts="${k}">${n}</button></th>`;
  return `<section id="top"><div class="wrap">${ttl('Топ игроков')}<input class="search" id="sq" placeholder="Поиск по нику" aria-label="Поиск по нику"><div class="card tw"><table><thead><tr><th>#</th><th>Игрок</th>${th('hours','Часов')}${th('kills','Убийств')}<th>Смертей</th>${th('kd','K/D')}${th('bots','Боты')}${th('crates','Ящики')}${th('built','Построено')}<th>Ранг</th></tr></thead><tbody id="tb"></tbody></table></div><p class="note">Топ обновляется с игрового сервера. Нажми на заголовок столбца, чтобы отсортировать.</p></div></section>`},
 donate(){return `<section id="donate"><div class="wrap">${ttl('Донат')}<div class="grid don">${C.donate.map(d=>`<div class="card dc ${d.tag?'hot':''}">${d.tag?`<span class="tag">${esc(d.tag)}</span>`:''}${embImg(d.img)}<h3>${esc(d.n)}</h3><div class="pr">${esc(priceOf(d))}</div><ul>${String(d.perks).split(',').map(x=>`<li>${esc(x.trim())}</li>`).join('')}</ul>${payOn(d)?`<a class="btn org" href="${esc(C.pay)}?pkg=${encodeURIComponent(d.n)}" target="_blank" rel="noopener">Купить</a>`:'<button class="btn" disabled>В разработке</button>'}<button class="btn org" data-sub="${esc(d.n)}" style="margin-top:8px">Подписка на срок</button></div>`).join('')}</div><p class="note">Подписка работает в тестовом режиме: деньги не списываются, подтверждение продления приходит в выбранный канал. Оплату подключим позже.</p><p class="note">Цены в евро. Возврат платежей запрещён: нельзя взять кит и вернуть деньги, это нечестно по отношению к другим игрокам. <button class="lk" data-legal="refund" style="background:none;border:0;color:var(--lime);padding:0;font-size:inherit">Подробнее</button></p></div></section>`},
-﻿blocks(){const lw=lastWipe(),B=(C.blocks||[]).slice().sort((a,b)=>a.s-b.s);const grp={};B.forEach(b=>(grp[b.s]=grp[b.s]||[]).push(b));
- const hrs=s=>s<=0?'Сразу':s%3600===0?'Через '+(s/3600)+' ч':'Через '+(s/3600).toFixed(1)+' ч';
- const next=B.find(b=>lw+b.s*1000>Date.now());
- const body=Object.keys(grp).map(Number).sort((a,b)=>a-b).map(s=>`<h3 class="grp">${hrs(s)} <span class="mut" style="font:500 15px var(--f-ui)" data-blkg="${lw+s*1000}"></span></h3><div class="grid blk">${grp[s].map(b=>`<div class="card bk" data-bk="${lw+b.s*1000}"><img src="https://rustlabs.com/img/items180/${esc(b.id)}.png" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><b>${esc(b.n)}</b><span class="bt">—</span></div>`).join('')}</div>`).join('');
- return `<section id="blocks"><div class="wrap">${ttl('Вайп-блоки')}<p class="note" style="margin:-14px 0 24px">После вайпа сильные предметы открываются постепенно, чтобы у всех был честный старт. Время считается от последнего вайпа.${next?` Следующий откроется: <b style="color:var(--lime)">${esc(next.n)}</b>, <span data-blkn="${lw+next.s*1000}"></span>.`:' Сейчас всё доступно.'}</p>${body}</div></section>`},
+blocks(){const lw=lastWipe(),now=Date.now(),loc=LANG==='en'?'en-GB':'ru-RU';
+ const all=(C.blocks||[]).map(b=>({...b,k:blkCat(b.id),t:lw+b.s*1000})).sort((a,b)=>a.t-b.t),cnt={};all.forEach(b=>cnt[b.k]=(cnt[b.k]||0)+1);
+ if(BC.cat!=='all'&&!cnt[BC.cat])BC.cat='all';
+ const list=all.filter(b=>BC.cat==='all'||b.k===BC.cat),col=b=>b.t<=now?2:b.t-now<=3600000?1:0;
+ const next=all.find(b=>b.t>now);
+ const chips=`<button class="btn sm ${BC.cat==='all'?'pri':''}" data-bc="all">Все · ${all.length}</button>`+blkCatList().filter(c=>cnt[c[0]]).map(c=>`<button class="btn sm ${BC.cat===c[0]?'pri':''}" data-bc="${c[0]}">${c[1]} · ${cnt[c[0]]}</button>`).join('');
+ const when=b=>new Date(b.t).toLocaleString(loc,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+ const card=(b,c)=>`<div class="bkc c${c}" data-bk="${b.t}" data-col="${c}"><img src="https://rustlabs.com/img/items180/${esc(b.id)}.png" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"><div><b>${esc(enItem(b.id,b.n))}</b><div class="bt">—</div><small>${c===2?'Открыт с '+when(b):'Откроется: '+when(b)}</small></div></div>`;
+ const colHtml=(i,t,d)=>{const L=list.filter(b=>col(b)===i);return `<div class="bcol c${i}"><h3>${t} <span>${L.length}</span></h3><p class="mut">${d}</p><div class="bl">${L.map(b=>card(b,i)).join('')||'<p class="mut">Пусто.</p>'}</div></div>`};
+ return `<section id="blocks"><div class="wrap">${ttl('Вайп-блоки')}<p class="note" style="margin:-14px 0 20px">После вайпа сильные предметы открываются постепенно, чтобы у всех был честный старт. Время считается от последнего вайпа.${next?` Следующий откроется: <b style="color:var(--lime)">${esc(next.n)}</b>, <span data-blkn="${next.t}"></span>.`:' Сейчас всё доступно.'}</p><div class="kchips">${chips}</div><div class="bcols">${colHtml(0,'Заблокировано','Ещё закрыто, больше часа')}${colHtml(1,'Скоро откроется','Меньше часа до открытия')}${colHtml(2,'Разблокировано','Можно крафтить и использовать')}</div></div></section>`},
 news(){const L=LIVE.news||[],KM={update:'Обновление',optimization:'Оптимизация',event:'Событие',map:'Карта',other:'Новость'};
  return `<section id="news"><div class="wrap">${ttl('Новости')}${L.length?`<div class="nw">${L.map(n=>`<div class="card"><span class="mut">${new Date(n.created*1000).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU',{day:'numeric',month:'long'})} · ${KM[n.kind]||'Новость'}</span><h3>${esc(n.title)}</h3><p class="mut" style="white-space:pre-line;margin:0">${esc(n.body.replace(/\*\*/g,'').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1'))}</p></div>`).join('')}</div>`:'<p class="mut" style="text-align:center">Новостей пока нет.</p>'}</div></section>`},
 tiles(){const L=LIVE.rustUpd||[],u=L[0];
@@ -868,7 +905,7 @@ async function loadArticle(a){
 document.addEventListener('click',e=>{const y=e.target.closest('[data-yt]');if(y){y.outerHTML='<iframe class="ayt" src="https://www.youtube-nocookie.com/embed/'+encodeURIComponent(y.dataset.yt)+'?autoplay=1" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>'}});
 async function loadWiki(){
  if(WK.data||WK.loading)return;WK.loading=true;
- try{const j=await (await fetch('wiki.json')).json();WK.data=j.items;WK.data.forEach(it=>{WK.by[it.s]=it;if(it.cr)it.cr.i.forEach(([s])=>{(WK.use[s]=WK.use[s]||[]).push(it.s)})})}
+ try{fetch('sources.json').then(r=>r.json()).then(j=>{WK.src=j}).catch(()=>{});const j=await (await fetch('wiki.json')).json();WK.data=j.items;WK.data.forEach(it=>{WK.by[it.s]=it;if(it.cr)it.cr.i.forEach(([s])=>{(WK.use[s]=WK.use[s]||[]).push(it.s)})})}
  catch(e){WK.data=[]}
  WK.loading=false;wikiDraw();
 }
@@ -889,9 +926,17 @@ function wikiModal(s){
  const chip=(x,n)=>{const o=WK.by[x];return '<button class="wkx" data-wkitem="'+esc(x)+'"><img src="'+itemIc(x)+'" alt="" onerror="this.style.visibility=\'hidden\'"><span>'+esc(o?o.n:x)+'</span>'+(n?'<b>×'+n+'</b>':'')+'</button>'};
  const wb=['','Верстак 1 уровня','Верстак 2 уровня','Верстак 3 уровня'];
  const craft=it.cr?'<h4>Как скрафтить</h4><div class="wkr">'+it.cr.i.map(([x,n])=>chip(x,n)).join('')+'</div><p class="mut">Получится ×'+it.cr.a+' · время: '+fmtT(it.cr.t)+' · '+(it.cr.wb?wb[Math.min(3,it.cr.wb)]:'верстак не нужен')+'</p>':'<p class="mut">Этот предмет не крафтится.</p>';
+ const S=WK.src,ids=(S&&S.items[s])||[],lab=id=>S.labels[id],li=l=>'<li class="wk-'+l[2]+'">'+esc(LANG==='en'?l[1]:l[0])+'</li>';
+ const ev=ids.map(lab).filter(l=>l[2]==='event'||l[2]==='npc'),pl=ids.map(lab).filter(l=>l[2]!=='event'&&l[2]!=='npc');
+ const DIVER=/diver|abyss/.test(s+it.n.toLowerCase()),RAW=/(^|\.)ore$|^(wood|stones|sulfur|metal\.fragments|metal\.ore|hq\.metal\.ore|cloth|leather|fat\.animal|bone\.fragments|lowgradefuel|scrap|crude\.oil)/.test(s);
+ const noteTxt=DIVER?LT('Предмет из зоны «Бездна» (Abyss) на дне океана. Его добывают в игре, за деньги не продаём. Это не DLC-привилегия.','An item from the Abyss zone on the ocean floor. You find it in the game; we do not sell it for money. It is not a DLC perk.')
+  :RAW?LT('Это ресурс. Его добывают из деревьев, камней, руд, животных, бочек и ящиков.','This is a resource. You gather it from trees, rocks, ores, animals, barrels and crates.')
+  :it.cr?LT('В таблицах добычи сервера его нет: предмет делается только крафтом.','It is not in the server loot tables: you can only craft it.')
+  :LT('Мы не нашли, откуда он падает. Скорее всего это скин, предмет события или предмет из магазина Rust.','We could not find where it drops. Most likely a skin, an event item or an item from the Rust store.');
+ const where=(ev.length||pl.length)?'<h4>'+LT('Где найти','Where to find')+'</h4>'+(ev.length?'<p class="mut" style="margin:6px 0 2px">'+LT('Ивенты и враги','Events and enemies')+'</p><ul class="wkw">'+ev.map(li).join('')+'</ul>':'')+(pl.length?'<p class="mut" style="margin:6px 0 2px">'+LT('Ящики, бочки и монументы','Crates, barrels and monuments')+'</p><ul class="wkw">'+pl.map(li).join('')+'</ul>':''):'<h4>'+LT('Где найти','Where to find')+'</h4><p class="mut">'+noteTxt+'</p>';
  const u=(WK.use[s]||[]).slice(0,18);
  const used=u.length?'<h4>Нужен для</h4><div class="wkr">'+u.map(x=>chip(x,0)).join('')+'</div>':'';
- modal('<div class="wkh"><img src="'+itemIc(s)+'" alt="" onerror="this.style.visibility=\'hidden\'"><div><h3 style="margin:0">'+esc(it.n)+'</h3><span class="mut">'+(WCAT[it.c]||it.c)+' · стак ×'+it.st+'</span></div></div>'+(it.d?'<p class="mut">'+esc(it.d)+'</p>':'')+craft+used+'<div class="row"><button class="btn pri" data-close>Закрыть</button></div>');
+ modal('<div class="wkh"><img src="'+itemIc(s)+'" alt="" onerror="this.style.visibility=\'hidden\'"><div><h3 style="margin:0">'+esc(it.n)+'</h3><span class="mut">'+(WCAT[it.c]||it.c)+' · стак ×'+it.st+'</span></div></div>'+(it.d?'<p class="mut">'+esc(it.d)+'</p>':'')+craft+where+used+'<div class="row"><button class="btn pri" data-close>Закрыть</button></div>');
 }
 document.addEventListener('click',e=>{
  const t=e.target;let b;
@@ -984,6 +1029,10 @@ function kitCatDefs(){return [
  ['food','Еда и вода',/(apple|^can\.|fish|meat|bean|corn|pumpkin|mushroom|chocolate|granola|jar|pickle|cooked|chicken|bread|berry|cactus|potato|egg|water|bottle|honey|^food)/],
  ['res','Ресурсы',/^(wood|stones|metal\.|sulfur|cloth|leather|lowgradefuel|scrap|fat\.animal|charcoal|gunpowder|hq\.metal|crude\.oil|bone\.fragments|diesel|gears|propane|tarp|rope|sewingkit|metalpipe|metalspring|semibody|techparts|riflebody|smgbody|sheetmetal|glue|ducttape|targetingcomputer|fuse)/],
  ['build','Постройка',/(door|wall|floor|barricade|box|cupboard|furnace|workbench|sleepingbag|bed$|ladder|shelves|planter|window|gates|fence|lantern|campfire|stash|barrel|table|chair|storage|bbq|recycler|turret|generator|battery|wire|electric|solarpanel)/]]}
+/* Wipe blocks use the same item groups as the in-game list. */
+var BC={cat:'all'};
+function blkCatList(){return [['weap','Оружие'],['tool','Инструменты'],['gear','Снаряжение'],['expl','Взрывчатка'],['ammo','Боеприпасы']]}
+function blkCat(id){const k=kitCat(id);return k==='cloth'||k==='med'?'gear':k}
 function kitCat(s){const d=kitCatDefs();for(const c of d)if(c[2].test(s))return c[0];return 'other'}
 function kitPage(name,list){const k=list.find(x=>x.n===name);
  const back=`<a class="btn" href="#kits">← Все киты</a>`;
@@ -996,15 +1045,15 @@ function kitPage(name,list){const k=list.find(x=>x.n===name);
  if(KC.cat!=='all'&&!cnt[KC.cat])KC.cat='all';
  const shown=rows.filter(r=>KC.cat==='all'||r.c===KC.cat),WH={'Пояс':'Пояс','Одежда':'Надето','Инвентарь':'Рюкзак'};
  const chips=`<button class="btn sm ${KC.cat==='all'?'pri':''}" data-kc="all">Все · ${rows.length}</button>`+cats.map(d=>`<button class="btn sm ${KC.cat===d[0]?'pri':''}" data-kc="${d[0]}">${d[1]} · ${cnt[d[0]]}</button>`).join('');
- const tiles=shown.map(x=>`<div class="kt">${rlImg(x.s)}<b>${esc(x.n||x.s)}</b><span class="kq">×${+x.a||1}</span>${WH[x.g]?`<small>${WH[x.g]}</small>`:''}</div>`).join('');
+ const tiles=shown.map(x=>`<div class="kt">${rlImg(x.s)}<b>${esc(enItem(x.s,x.n||x.s))} <span class="kq">×${+x.a||1}</span></b>${WH[x.g]?`<small>${WH[x.g]}</small>`:''}</div>`).join('');
  const total=rows.reduce((a,x)=>a+(+x.a||1),0),pkg=C.donate.some(x=>x.n===k.n);
  const others=list.filter(x=>x.n!==name).map(x=>`<a class="btn sm" href="#kits/${encodeURIComponent(x.n)}">${esc(x.n)}</a>`).join('');
  return `<section id="kits"><div class="wrap">${back}
- <div class="khero">${embImg(k.img)}<div><h2 class="kh2">Кит «${esc(k.n)}»</h2><div class="mut">${k.type==='prem'?'Премиум кит':'Бесплатный кит'} · ${rows.length} предметов${exact?`, всего ${total} шт.`:''}${+k.use?` · раз в ${dur(k.use)}`:''}</div>
+ <div class="kpanel"><div class="khero">${embImg(k.img)}<div><h2 class="kh2">Кит «${esc(k.n)}»</h2><div class="mut">${k.type==='prem'?'Премиум кит':'Бесплатный кит'} · ${rows.length} предметов${exact?`, всего ${total} шт.`:''}${+k.use?` · раз в ${dur(k.use)}`:''}</div>
  <div class="mut" style="font-size:14px;margin-top:6px">В игре: меню → Киты или команда /kit. Всё выдаётся сразу, что не влезло, падает рядом на землю.</div>
  ${pkg?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="btn org" data-sub="${esc(k.n)}">Оформить подписку</button><a class="btn" href="#donate">Условия доната</a></div>`:''}</div></div>
  ${exact?'':'<p class="note">Точный состав появится, когда сервер передаст его на сайт. Пока показаны примеры предметов.</p>'}
- <div class="kchips">${chips}</div><div class="kgrid">${tiles||'<p class="mut">В этой категории пусто.</p>'}</div>
+ <div class="klbl">Что внутри</div><div class="kchips">${chips}</div><div class="kgrid">${tiles||'<p class="mut">В этой категории пусто.</p>'}</div></div>
  <h3 class="grp">Другие киты</h3><div style="display:flex;flex-wrap:wrap;gap:8px">${others}</div>
  <div style="margin-top:26px">${back}</div></div></section>`}
 
@@ -1065,7 +1114,7 @@ function renderTop(q=''){const tb=$('#tb');if(!tb)return;queueMicrotask(()=>appl
  const rows=TOP.slice().sort((a,b)=>topKey(b,TOPSORT)-topKey(a,TOPSORT)).map((p,i)=>[p,i]).filter(([p])=>String(p.name).toLowerCase().includes(q.toLowerCase()));
  tb.innerHTML=rows.map(([p,i])=>{const kd=(p.kills/Math.max(1,p.deaths||0)).toFixed(2),up=(p.upWood||0)+(p.upStone||0)+(p.upMetal||0)+(p.upHqm||0);
   return `<tr><td class="pos">${i+1}</td><td>${esc(p.name)}${up?`<small class="mut" style="display:block;font-size:11px">улучшено: дерево ${p.upWood||0} · камень ${p.upStone||0} · металл ${p.upMetal||0} · МВК ${p.upHqm||0}</small>`:''}</td><td>${Math.floor(p.hours)}</td><td>${p.kills}</td><td>${p.deaths||0}</td><td>${kd}</td><td>${p.botKills||0}</td><td>${p.crates||0}</td><td>${p.placed||0}</td><td><span class="rk">${esc(p.rank||C.ranks[rankOf(p.hours)].n)}</span>${p.priv?` <span class="rk" style="color:var(--orange)">${esc(p.priv)}</span>`:''}</td></tr>`}).join('')||'<tr><td colspan="10" class="mut">Игрок не найден.</td></tr>'}
-function tickBlocks(){const n=Date.now();$$('[data-bk]').forEach(e=>{const l=(+e.dataset.bk-n)/1000,b=e.querySelector('.bt');if(!b)return;if(l>0){b.textContent=fmt(l);e.classList.remove('open')}else{b.textContent='Доступно';e.classList.add('open')}});$$('[data-blkg]').forEach(e=>{const l=(+e.dataset.blkg-n)/1000;e.textContent=l>0?'· '+fmt(l):'· открыто'});$$('[data-blkn]').forEach(e=>{const l=(+e.dataset.blkn-n)/1000;e.textContent='через '+fmt(Math.max(0,l))})}
+function tickBlocks(){const n=Date.now();$$('[data-bk]').forEach(e=>{const l=(+e.dataset.bk-n)/1000,b=e.querySelector('.bt');if(!b)return;if(l>0){b.textContent=fmt(l);e.classList.remove('open')}else{b.textContent='Доступно';e.classList.add('open')}const c=l<=0?2:l<=3600?1:0;if(e.dataset.col!==undefined&&+e.dataset.col!==c&&!tickBlocks.r){tickBlocks.r=1;setTimeout(()=>{tickBlocks.r=0;renderSite()},300)}});$$('[data-blkg]').forEach(e=>{const l=(+e.dataset.blkg-n)/1000;e.textContent=l>0?'· '+fmt(l):'· открыто'});$$('[data-blkn]').forEach(e=>{const l=(+e.dataset.blkn-n)/1000;e.textContent='через '+fmt(Math.max(0,l))})}
 function tick(){tickBlocks();const w=nextWipes(1)[0];const cd=$('#cd');if(cd&&w){const s=Math.max(0,(w.ts-Date.now())/1000|0);cd.innerHTML=[[s/86400|0,'ДНИ'],[s%86400/3600|0,'ЧАСЫ'],[s%3600/60|0,'МИН'],[s%60,'СЕК']].map(([v,l])=>`<div><b>${String(v).padStart(2,'0')}</b><span>${l}</span></div>`).join('')}
  $$('[data-end]').forEach(e=>{const l=(+e.dataset.end-Date.now())/1000;if(e.dataset.fmt==='d'){const s=Math.max(0,l|0);e.textContent=(s/86400|0)+(LANG==='en'?'d ':'д ')+(s%86400/3600|0)+(LANG==='en'?'h ':'ч ')+(s%3600/60|0)+(LANG==='en'?'m':'м')}else{if(l<=0&&!tick.r){tick.r=1;setTimeout(()=>{tick.r=0;renderSite()},50)}e.textContent=fmt(l)}})}
 setInterval(tick,1000);setInterval(paintOnline,15000);
@@ -1118,6 +1167,7 @@ document.addEventListener('click',e=>{const z=e.target.closest('[data-zoom]');if
  if(d.cp)copy(d.cp);
  else if(d.kv)kitModal(d.kv);
  else if(d.kc!==undefined){KC.cat=d.kc;renderSite()}
+ else if(d.bc!==undefined){BC.cat=d.bc;renderSite()}
  else if(d.sub){SUBS={n:d.sub,m:1,ch:'discord',contact:'',mode:'solo',members:['','','','']};subModal()}
  else if(d.smode){SUBS.mode=d.smode;subModal()}
  else if(d.sjoin)subAct('join',d.sjoin);

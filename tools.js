@@ -113,7 +113,7 @@
   const TICON = { 'door.wood': 'door.hinged.wood', 'door.metal': 'door.hinged.metal', 'door.armored': 'door.hinged.toptier', 'door.double.wood': 'door.double.hinged.wood', 'door.double.metal': 'door.double.hinged.metal', 'door.double.armored': 'door.double.hinged.toptier', garage: 'wall.frame.garagedoor', 'wall.high.wood': 'wall.external.high', 'wall.high.stone': 'wall.external.high.stone', 'gate.high.wood': 'gates.external.high.wood', 'gate.high.stone': 'gates.external.high.stone', 'ladder.hatch': 'floor.ladder.hatch', shutters: 'shutter.wood.a', 'window.bars.metal': 'wall.window.bars.metal', 'window.glass': 'wall.window.glass.reinforced', 'wall.frame.cell': 'wall.frame.cell', 'box.wood.large': 'box.wooden.large', cupboard: 'cupboard.tool', turret: 'autoturret', vending: 'vending.machine', sam: 'samsite', 'furnace.large': 'furnace.large' };
   // vehicle and special ammo: it works, but nobody raids with it, so it is shown only on request
   const EXO = new Set(['catapult.ammo.boulder', 'submarine.torpedo.straight', 'ammo.rocket.mlrs', 'ammo.rocket.seeker', 'ballista.bolt.hammerhead', 'grenade.flashbang']);
-  const TSW = { twig: '#b59a56', wood: '#9a6a34', stone: '#9aa093', metal: '#7a8da0', toptier: '#4b535d' };
+  const TSW = { twig: '#d9962f', wood: '#8a5528', stone: '#9aa093', metal: '#7a8da0', toptier: '#4b535d' };
   S.base = [{ id: 'tier:stone', qty: 1, hp: 0 }]; S.show = 'x'; S.sort = 'sulfur'; S.view = 'table';
   const parseBase = (s) => s.split(',').map((p) => { const [id, q, h] = p.split('*'); return { id, qty: Math.max(1, Math.min(999, +q || 1)), hp: Math.max(0, +h || 0) }; }).filter((x) => x.id);
   function loadBase() {
@@ -123,7 +123,7 @@
   }
   const saveBase = () => { try { localStorage.setItem('lima.base', JSON.stringify(S.base)); } catch (e) { /* private mode */ } };
   const targetById = (id) => targets().find((x) => x.id === id);
-  const tIcon = (tg) => (tg.id.indexOf('tier:') === 0 ? '<i class="tsw" style="background:' + TSW[tg.id.slice(5)] + '"></i>' : '<img src="' + itemIc(TICON[tg.id.slice(5)] || tg.id.slice(5)) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<i class=&quot;tsw&quot; style=&quot;background:#5a6070&quot;></i>\'">');
+  const tIcon = (tg) => (tg.id.indexOf('tier:') === 0 ? '<i class="tsw t-' + tg.id.slice(5) + '" style="background:' + TSW[tg.id.slice(5)] + '"></i>' : '<img src="' + itemIc(TICON[tg.id.slice(5)] || tg.id.slice(5)) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<i class=&quot;tsw&quot; style=&quot;background:#5a6070&quot;></i>\'">');
   function cleanBase() {
     S.base = S.base.filter((x) => targetById(x.id));
     if (!S.base.length) S.base = [{ id: 'tier:stone', qty: 1, hp: 0 }];
@@ -310,7 +310,7 @@
   }
   function wallColor(t) {
     const id = t.id;
-    if (id.indexOf('tier:') === 0) return { twig: '#b59a56', wood: '#9a6a34', stone: '#9aa093', metal: '#7a8da0', toptier: '#4b535d' }[id.slice(5)] || '#8d9185';
+    if (id.indexOf('tier:') === 0) return { twig: '#d9962f', wood: '#8a5528', stone: '#9aa093', metal: '#7a8da0', toptier: '#4b535d' }[id.slice(5)] || '#8d9185';
     if (/armored/.test(id) || /cell/.test(id)) return '#4b535d';
     if (/metal|garage|bars|hatch|glass/.test(id)) return '#7a8da0';
     if (/stone/.test(id)) return '#9aa093';

@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#0c0e09">
 <meta name="google-site-verification" content="EgBGZ7Jw3SC5rdVgW6TBxUBymenPPJVoRjpsMXvzG7A" />
 <link rel="canonical" href="https://limarust.github.io/">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
 <link rel="icon" href="img/lemon2.png">
 <link rel="apple-touch-icon" href="img/lemon2.png">
 <meta property="og:type" content="website">
@@ -113,6 +114,13 @@ section{padding-block:64px}
 .emb{display:block;width:100%;max-width:230px;aspect-ratio:1;margin:0 auto;object-fit:contain;transition:transform .2s}
 .card:hover>.emb{transform:scale(1.04)}
 .grp{font:700 24px var(--f-px);margin:30px 0 16px;color:var(--lime)}
+.khero{display:flex;gap:22px;align-items:center;margin:22px 0}.khero .emb{width:110px;flex:none;margin:0}.kh2{margin:0 0 6px;font:700 30px var(--f-px);color:var(--lime)}
+.kchips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 20px}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.kt{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;text-align:center}
+.kt img{width:76px;height:76px;object-fit:contain}.kt b{font-size:14px;line-height:1.25}.kt small{color:var(--dim);font-size:12px}
+.kt .kq{position:absolute;top:8px;right:10px;font:700 15px var(--f-px);color:var(--orange)}
+@media(max-width:560px){.khero{flex-direction:column;text-align:center}.kgrid{grid-template-columns:repeat(2,1fr)}}
 .blk{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .bk{padding:14px 10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;border-color:var(--line);transition:border-color .3s}
 .bk img{width:64px;height:64px;object-fit:contain}
@@ -745,6 +753,7 @@ cabinet(){if(!ACC)return '';const ri=rankOf(ACC.hours),r=C.ranks[ri],nx=C.ranks[
  <dl class="pd"><div><dt>Игрок</dt><dd>${esc(ACC.nick)}</dd></div><div><dt>Steam ID</dt><dd>${esc(ACC.steamId)} <button class="btn sm" data-cp="${esc(ACC.steamId)}" style="padding:4px 10px;font-size:12px">Копировать</button></dd></div><div><dt>Привилегия</dt><dd>${hasP?esc(ACC.priv)+' <span class="ok" style="font-size:13px">активна</span>':adm?'Администратор':'Нет'}</dd></div><div><dt>Часов на сервере</dt><dd>${ACC.hours}</dd></div><div><dt>Регистрация</dt><dd>${new Date(ACC.since).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU')}</dd></div></dl></div>
  <div class="card"><h3>Ранг по времени</h3><div style="font:700 32px var(--f-px);color:var(--lime)">${esc(r.n)}</div><div class="mut">Награда: ${esc(r.r)}</div><div class="bar" style="height:18px"><i style="width:${pct}%"></i></div><div class="mut" style="display:flex;justify-content:space-between;font-size:14px"><span>${ACC.hours} ч</span><span>${nx?`до «${esc(nx.n)}»: ${nx.h} ч`:'максимальный ранг'}</span></div></div>
  <div class="card"><h3>Мои киты</h3><div style="display:grid;gap:8px">${kits}</div></div>
+ ${ACC.steamId?`<div class="card"><h3>Подписки</h3><div id="subbox" style="display:grid;gap:10px">${subsHtml()}</div></div>`:''}
  <div class="card"><h3>Связанные аккаунты</h3><div class="kr"><span>Steam</span>${ACC.steamId?'<b class="ok">Привязан</b>':'<button class="btn sm pri" data-linksteam>Привязать Steam</button>'}</div>${ACC.email?`<div class="kr"><span>Google · ${esc(ACC.email)}</span><b class="ok">Привязан</b></div>`:'<div class="kr" style="flex-direction:column;align-items:stretch;gap:10px"><span>Google</span><span id="gbtn2" class="gwrap"></span></div>'}<div class="mut" style="font-size:14px">${ACC.steamId&&ACC.email?'Можно входить любым способом, кабинет будет один.':'Привяжи второй способ входа: тогда кабинет, ранг и права будут одинаковыми при входе через Steam и через Google.'}</div>${ACC.email?`<h3 style="margin-top:6px">Уведомления на почту</h3>${[['map','Голосование за карту'],['wipe','Новый вайп'],['news','Новости сервера']].map(([k,n])=>`<label class="er" style="gap:10px"><input type="checkbox" data-topic="${k}" ${(ACC.topics||[]).includes(k)?'checked':''}>${n}</label>`).join('')}<div class="mut" style="font-size:13px">Подписки сохраняются сразу. Рассылка включится, когда подключим почтовый сервис.</div>`:''}<button class="btn sm" data-logout style="align-self:flex-start;margin-top:auto">Выйти из аккаунта</button></div>
  <div class="card" style="grid-column:1/-1;justify-self:center;width:min(100%,460px);text-align:center;align-items:center"><h3>Ближайший вайп</h3>${w?`<div style="font:700 30px var(--f-px);color:var(--orange)" ${wipeDev()?'>В разработке':`data-end="${w.ts}" data-fmt="d">—`}</div>${wipeDev()?'':`<div class="mut">${WDF[w.wd]}, ${w.d} ${MN[w.m]}, ${C.wipe.hour}:00 по Берлину</div>`}`:''}<h3 style="margin-top:6px">Голос за карту</h3><div class="mut">${mv?`Твой голос: <b style="color:var(--lime)">${esc(mv)}</b>`:'Ты ещё не голосовал.'}</div><a class="btn sm" href="#map">К голосованию</a></div>
  ${adm?`<div class="card" style="border-color:var(--orange);grid-column:1/-1;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between"><div style="display:grid;gap:8px;max-width:640px"><h3>Редактор сайта</h3><div class="mut">Ты вошёл как администратор. Можно менять разделы, вайп, карты, ранги, киты, правила, донат и доступ.</div></div><button class="btn org" data-drawer>Открыть редактор</button></div>`:''}
@@ -753,11 +762,11 @@ why(){return `<section id="why"><div class="wrap">${ttl('Зачем играть
 ranks(){return `<section id="ranks"><div class="wrap">${ttl('Ранги по времени')}<p class="note" style="margin:-14px 0 24px">Играй на сервере и получай награды. Ранг растёт сам, ничего покупать не нужно.</p><div class="grid ranks">${C.ranks.map((r,i)=>`<div class="card rank"><img class="rimg" src="img/ranks/rank-${i%10}.png" alt="" loading="lazy"><span class="rno">${LT('Ранг','Rank')} ${i+1}</span><h3>${esc(r.n)}</h3><span class="rsub">${LT(RSUB[i%10][0],RSUB[i%10][1])}</span><span class="hrs">${i?LT('от '+r.h+' ч игры','from '+r.h+' h played'):LT('Старт: сразу при входе','Start: right away')}</span><p><b>${LT('Награда','Reward')}:</b> ${esc(r.r)}</p></div>`).join('')}</div></div></section>`},
 map(){const vt=C.maps.reduce((a,m)=>a+(+m.votes||0),0)||1;const mine=ACC&&MYVOTE&&MYVOTE.nick===ACC.nick?MYVOTE.i:-1;
  return `<section id="map"><div class="wrap">${ttl('Карта вайпа')}<div class="mapg"><div class="card mapc"><span class="badge lime">Текущий вайп</span>${C.curMap.dev?`<div class="mimg" style="display:flex;align-items:center;justify-content:center;width:100%;max-width:380px;aspect-ratio:1;border-radius:10px;border:1px dashed var(--line);background:radial-gradient(circle at 50% 40%,#30351f,#1b1e15);color:var(--orange);font:700 26px var(--f-px);text-align:center;padding:16px">В разработке</div><h3 style="font:700 22px var(--f-px)">Карта скоро появится</h3>`:`${C.curMap.img?`<img class="mimg" data-zoom src="${esc(C.curMap.img)}" alt="${esc(C.curMap.name)}">`:'<canvas id="cm" data-zoom></canvas>'}<h3 style="font:700 22px var(--f-px)">${esc(C.curMap.name)}</h3><span class="mut">Seed ${esc(C.curMap.seed)} · размер ${esc(C.curMap.size)}</span>`}</div>${pollBlock()}</div></div></section>`},
-kits(){const card=k=>{const ex=kitEx(k.ex&&k.ex.length?k.ex:KEXD[k.n]);return `<div class="card kit ${k.type}">${embImg(k.img)}<div class="top"><span>${k.type==='prem'?'Премиум':'Бесплатный'}</span></div><h3>${esc(k.n)}</h3>${ex.length?`<div class="exs">${ex.map(rlImg).join('')}</div>`:`<ul>${String(k.items).split(',').map(x=>`<li>${esc(x.trim())}</li>`).join('')}</ul>`}<div class="cd mut">${+k.use?`Раз в ${dur(k.use)}`:''}${+k.wipe?`<br>После вайпа через ${dur(k.wipe)}`:''}</div><button class="btn sm" data-kv="${esc(k.n)}" style="margin-top:10px">Посмотреть</button></div>`};
+kits(){const card=k=>{const ex=kitEx(k.ex&&k.ex.length?k.ex:KEXD[k.n]);return `<div class="card kit ${k.type}">${embImg(k.img)}<div class="top"><span>${k.type==='prem'?'Премиум':'Бесплатный'}</span></div><h3>${esc(k.n)}</h3>${ex.length?`<div class="exs">${ex.map(rlImg).join('')}</div>`:`<ul>${String(k.items).split(',').map(x=>`<li>${esc(x.trim())}</li>`).join('')}</ul>`}<div class="cd mut">${+k.use?`Раз в ${dur(k.use)}`:''}${+k.wipe?`<br>После вайпа через ${dur(k.wipe)}`:''}</div><a class="btn sm" href="#kits/${encodeURIComponent(k.n)}" style="margin-top:10px">Посмотреть состав</a></div>`};
  /* Kits come from the game when the server has synced them (kitsLive); the admin's hide switch still applies by name. */
  const hidden=new Set((C.kits||[]).filter(k=>!k.on).map(k=>k.n));
  const live=Array.isArray(C.kitsLive)&&C.kitsLive.length;
- const on=live?C.kitsLive.map(k=>({n:k.n,type:k.t==='prem'?'prem':'free',items:'',ex:k.i,det:k.d||[],use:k.c,wipe:0,img:k.e,on:true})).filter(k=>!hidden.has(k.n)):C.kits.filter(k=>k.on);KITV=on;const grp=(t,list)=>list.length?`<h3 class="grp">${t}</h3><div class="grid kits">${list.map(card).join('')}</div>`:'';
+ const on=live?C.kitsLive.map(k=>({n:k.n,type:k.t==='prem'?'prem':'free',items:'',ex:k.i,det:k.d||[],use:k.c,wipe:0,img:k.e,on:true})).filter(k=>!hidden.has(k.n)):C.kits.filter(k=>k.on);KITV=on;{const kr=kitRef();if(kr)return kitPage(kr,on)}const grp=(t,list)=>list.length?`<h3 class="grp">${t}</h3><div class="grid kits">${list.map(card).join('')}</div>`:'';
  return `<section id="kits"><div class="wrap">${ttl('Киты')}${grp('Бесплатные киты',on.filter(k=>k.type!=='prem'))}${grp('Премиум киты',on.filter(k=>k.type==='prem'))}<p class="note kn">Показаны примеры предметов для красоты, точный состав кита может отличаться.</p></div></section>`},
 wipe(){const L=nextWipes(7);const w=L[0];const fm=x=>`${WD[x.wd]}, ${x.d} ${MN[x.m]}`;const dev=wipeDev();
  return `<section id="wipe"><div class="wrap">${ttl('Расписание вайпов')}<div class="grid two"><div class="card next"><span>Следующий вайп</span><b class="px">${dev?'В разработке':w?fm(w)+', '+w.h+':00':''}</b>${dev?'':`<span style="font-size:13px;font-weight:500">по Европе (Берлин)${w?` · у тебя ${new Date(w.ts).toLocaleString(LANG==='en'?'en-GB':'ru-RU',{weekday:'short',hour:'2-digit',minute:'2-digit'})}`:''}</span><div class="cd4" id="cd"></div>`}<a class="btn" style="background:var(--lime-d);color:var(--lime)" href="#discord">Напомнить в Discord</a></div><div class="card" style="padding:8px">${dev?`<div style="padding:34px 18px;text-align:center"><b style="font:700 26px var(--f-px);color:var(--orange)">В разработке</b><p class="mut" style="margin:10px 0 0">Расписание вайпов появится ${devUntilText()}.</p></div>`:`<div style="padding:10px 14px;color:var(--mute);font-size:13px">${C.wipe.freq==='weekly'?'Каждую пятницу':'Раз в две недели по пятницам'}. Первый четверг месяца: вайп в четверг.</div>${L.map((x,i)=>`<div class="wk"><span>${fm(x)}<small>${x.h}:00 Берлин</small></span><b style="color:${x.force?'var(--orange)':'var(--lime)'}">${i?x.force?'Форс-вайп':'Вайп':'Ближайший'}</b></div>`).join('')}`}</div></div>${eventsBlock()}</div></section>`},
@@ -799,7 +808,7 @@ const HOME_SECTIONS=['home','tiles','why','ranks','donate','wipe','map','rules',
 const artRef=()=>{const m=location.hash.slice(1).match(/^updates\/(\d+)\.(\d+)/);return m?{id:m[1],d:+m[2]}:null};
 const curPage=()=>{const h=location.hash.slice(1).split(/[\/?]/)[0];if(!PAGES.includes(h))return '';if(h==='cabinet')return ACC?h:'';return C.show[h]?h:''};
 let SHOWN='',LASTPG;
-const pageKey=()=>curPage()+(curPage()==='updates'&&artRef()?'/'+artRef().id:'');
+const pageKey=()=>curPage()+(curPage()==='updates'&&artRef()?'/'+artRef().id:'')+(curPage()==='kits'&&kitRef()?'/'+kitRef():'');
 const UP={year:'all'};
 const WK={q:'',cat:'all',data:null,by:{},use:{},loading:false,limit:60};
 const WCAT={Weapon:'Оружие',Ammunition:'Патроны',Attire:'Одежда',Tool:'Инструменты',Construction:'Строительство',Resources:'Ресурсы',Food:'Еда',Medical:'Медицина',Electrical:'Электрика',Component:'Компоненты',Traps:'Ловушки',Items:'Предметы',Misc:'Разное',Fun:'Развлечения'};
@@ -897,6 +906,7 @@ function renderSite(){
  const pg=curPage();SHOWN=pageKey();
  $('#main').innerHTML=(pg?[pg]:HOME_SECTIONS.filter(k=>k==='home'||k==='tiles'||k==='discord'||C.show[k])).map(k=>SEC[k]()).join('');
  if(pg==='wiki'){if(WK.data)wikiDraw();else loadWiki()}
+ if(pg==='cabinet')loadSubs();
  $('#main').classList.toggle('pgin',pageKey()!==LASTPG);LASTPG=pageKey();
  if(pg==='updates'&&artRef())loadArticle(artRef());
  $('#bn').innerHTML=wm(C.name);document.title=C.name+(LANG==='en'?' — Rust server: kits, shop, wipes':' — сервер Rust: киты, магазин, вайпы');document.documentElement.lang=LANG;
@@ -961,6 +971,43 @@ document.addEventListener('change',async e=>{
  catch(err){t.checked=!t.checked;toast('Не удалось сохранить подписку')}});
 const CUR_SYM={EUR:'€',USD:'$',UAH:'₴',PLN:'zł',CZK:'Kč',GBP:'£',RUB:'₽',KZT:'₸',TRY:'₺'};
 
+/* Kit page: one kit on its own screen, items split by category. */
+var KC={n:'',cat:'all'};
+function kitRef(){const m=location.hash.slice(1).match(/^kits\/([^?]+)/);if(!m)return '';try{return decodeURIComponent(m[1])}catch(e){return m[1]}}
+function kitCatDefs(){return [
+ ['expl','Взрывчатка',/^(explosive\.|grenade\.|ammo\.rocket|ammo\.grenadelauncher|surveycharge)/],
+ ['ammo','Боеприпасы',/^(ammo\.|arrow\.)/],
+ ['weap','Оружие',/^(rifle|smg|pistol|shotgun|bow|crossbow|lmg|multiplegrenadelauncher|rocket\.launcher|spear|knife|machete|mace|longsword|salvaged\.(sword|cleaver)|bone\.club|flamethrower|snowballgun|hmlmg|t1_smg|weapon\.mod)/],
+ ['cloth','Одежда и броня',/(jacket|hoodie|pants|shirt|boots|gloves|^hat|\.hat|hat$|helmet|facemask|plate\.torso|armor|hazmat|mask|vest|shoes|balaclava|bandana|burlap|attire|coat|kilt|roadsign|diving|parka|wetsuit|scientist|beenie|boonie|cap$)/],
+ ['med','Медицина',/(medkit|syringe|bandage|antiradpills|bloodbag|healingtea|painkiller|tea\.)/],
+ ['tool','Инструменты',/(pickaxe|hatchet|axe$|chainsaw|jackhammer|hammer|building\.planner|torch|flashlight|binoculars|fishingrod|^map|lock|key|camera|geiger|sickle|rake|shovel|pitchfork|paddle|icepick)/],
+ ['food','Еда и вода',/(apple|^can\.|fish|meat|bean|corn|pumpkin|mushroom|chocolate|granola|jar|pickle|cooked|chicken|bread|berry|cactus|potato|egg|water|bottle|honey|^food)/],
+ ['res','Ресурсы',/^(wood|stones|metal\.|sulfur|cloth|leather|lowgradefuel|scrap|fat\.animal|charcoal|gunpowder|hq\.metal|crude\.oil|bone\.fragments|diesel|gears|propane|tarp|rope|sewingkit|metalpipe|metalspring|semibody|techparts|riflebody|smgbody|sheetmetal|glue|ducttape|targetingcomputer|fuse)/],
+ ['build','Постройка',/(door|wall|floor|barricade|box|cupboard|furnace|workbench|sleepingbag|bed$|ladder|shelves|planter|window|gates|fence|lantern|campfire|stash|barrel|table|chair|storage|bbq|recycler|turret|generator|battery|wire|electric|solarpanel)/]]}
+function kitCat(s){const d=kitCatDefs();for(const c of d)if(c[2].test(s))return c[0];return 'other'}
+function kitPage(name,list){const k=list.find(x=>x.n===name);
+ const back=`<a class="btn" href="#kits">← Все киты</a>`;
+ if(!k)return `<section id="kits"><div class="wrap">${back}<p class="mut" style="margin-top:18px">Такого кита нет.</p></div></section>`;
+ if(KC.n!==name)KC={n:name,cat:'all'};
+ let det=Array.isArray(k.det)?k.det:[];const exact=det.length>0;
+ if(!exact)det=[...new Set(typeof k.ex==='string'?k.ex.split(','):(k.ex||[]))].filter(Boolean).map(s=>({s,n:s,a:1,g:''}));
+ const rows=det.map(x=>({...x,c:kitCat(x.s)})),cnt={};rows.forEach(r=>cnt[r.c]=(cnt[r.c]||0)+1);
+ const cats=kitCatDefs().filter(d=>cnt[d[0]]).concat(cnt.other?[['other','Прочее']]:[]);
+ if(KC.cat!=='all'&&!cnt[KC.cat])KC.cat='all';
+ const shown=rows.filter(r=>KC.cat==='all'||r.c===KC.cat),WH={'Пояс':'Пояс','Одежда':'Надето','Инвентарь':'Рюкзак'};
+ const chips=`<button class="btn sm ${KC.cat==='all'?'pri':''}" data-kc="all">Все · ${rows.length}</button>`+cats.map(d=>`<button class="btn sm ${KC.cat===d[0]?'pri':''}" data-kc="${d[0]}">${d[1]} · ${cnt[d[0]]}</button>`).join('');
+ const tiles=shown.map(x=>`<div class="kt">${rlImg(x.s)}<b>${esc(x.n||x.s)}</b><span class="kq">×${+x.a||1}</span>${WH[x.g]?`<small>${WH[x.g]}</small>`:''}</div>`).join('');
+ const total=rows.reduce((a,x)=>a+(+x.a||1),0),pkg=C.donate.some(x=>x.n===k.n);
+ const others=list.filter(x=>x.n!==name).map(x=>`<a class="btn sm" href="#kits/${encodeURIComponent(x.n)}">${esc(x.n)}</a>`).join('');
+ return `<section id="kits"><div class="wrap">${back}
+ <div class="khero">${embImg(k.img)}<div><h2 class="kh2">Кит «${esc(k.n)}»</h2><div class="mut">${k.type==='prem'?'Премиум кит':'Бесплатный кит'} · ${rows.length} предметов${exact?`, всего ${total} шт.`:''}${+k.use?` · раз в ${dur(k.use)}`:''}</div>
+ <div class="mut" style="font-size:14px;margin-top:6px">В игре: меню → Киты или команда /kit. Всё выдаётся сразу, что не влезло, падает рядом на землю.</div>
+ ${pkg?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="btn org" data-sub="${esc(k.n)}">Оформить подписку</button><a class="btn" href="#donate">Условия доната</a></div>`:''}</div></div>
+ ${exact?'':'<p class="note">Точный состав появится, когда сервер передаст его на сайт. Пока показаны примеры предметов.</p>'}
+ <div class="kchips">${chips}</div><div class="kgrid">${tiles||'<p class="mut">В этой категории пусто.</p>'}</div>
+ <h3 class="grp">Другие киты</h3><div style="display:flex;flex-wrap:wrap;gap:8px">${others}</div>
+ <div style="margin-top:26px">${back}</div></div></section>`}
+
 /* Kit contents window and the test subscription window. */
 let KITV=[];
 const KGROUPS=['Пояс','Одежда','Инвентарь'];
@@ -970,25 +1017,45 @@ function kitModal(name){const k=KITV.find(x=>x.n===name);if(!k)return;const det=
 
 const SUBM=[[1,1,'1 месяц'],[2,.95,'2 месяца'],[6,.85,'6 месяцев'],[12,.75,'12 месяцев']];
 const SUBCH=[['telegram','Telegram'],['discord','Discord'],['email','Почта']];
-let SUBS={n:'',m:1,ch:'telegram',contact:'',friends:''};
+var SUBS={n:'',m:1,ch:'discord',contact:'',mode:'solo',members:['','','','']};
 const subBase=n=>{const d=C.donate.find(x=>x.n===n)||{};const p=LIVE.pricing;const v=p&&p.prices&&p.prices[n]!=null?+p.prices[n]:+d.price||0;const cur=p&&p.currency?(CUR_SYM[p.currency]||p.currency):'€';return {v,cur}};
-const subFriends=()=>SUBS.friends.split(/\n|,/).map(x=>x.trim()).filter(Boolean);
+const subFriends=()=>SUBS.mode==='clan'?SUBS.members.map(x=>x.trim()).filter(Boolean):[];
 const subTotal=()=>{const b=subBase(SUBS.n),m=SUBM.find(x=>x[0]===SUBS.m),per=Math.round(b.v*m[0]*m[1]*100)/100,people=1+subFriends().length;return {per,people,sum:Math.round(per*people*100)/100,cur:b.cur,save:Math.round(b.v*m[0]*(1-m[1])*100)/100}};
 function subSummary(){const s=subTotal();return `<div class="kr"><span>На человека</span><b>${s.per} ${s.cur}</b></div><div class="kr"><span>Человек (ты и друзья)</span><b>${s.people}</b></div><div class="kr"><span>Итого за срок</span><b style="color:var(--orange)">${s.sum} ${s.cur}</b></div>${s.save>0?`<div class="mut" style="font-size:13px">Скидка за срок: ${s.save} ${s.cur} на человека.</div>`:''}`}
+const STEAM64=/^7656119\d{10}$/;
 function subModal(){const s=SUBS;
- modal(`<h3 style="margin:0 0 4px">Подписка «${esc(s.n)}» (тест)</h3><div class="mut" style="font-size:14px">Деньги пока не списываются. Подтверждение, что подписка продлевается, придёт тебе в выбранный канал.</div>
+ if(!ACC||!ACC.steamId){modal(`<h3 style="margin:0 0 6px">Подписка «${esc(s.n)}»</h3><p class="mut">Подписка привязана к игровому аккаунту, поэтому сначала войди через Steam.</p><div class="row"><button class="btn pri" data-login>Войти</button><button class="btn" data-close>Закрыть</button></div>`);return}
+ const clan=s.mode==='clan';
+ modal(`<h3 style="margin:0 0 4px">Подписка «${esc(s.n)}»${LIVE_SUBS_TEST?' (тест)':''}</h3><div class="mut" style="font-size:14px">${LIVE_SUBS_TEST?'Деньги пока не списываются, привилегия выдаётся на 1 день для проверки. ':''}Подписка продлевается сама каждый период. Отменить продление можно в кабинете.</div>
+ <h4 style="margin:12px 0 6px">Для кого</h4><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="btn sm ${clan?'':'pri'}" data-smode="solo">Для себя</button><button class="btn sm ${clan?'pri':''}" data-smode="clan">Для клана (до 5 человек)</button></div>
+ ${clan?`<p class="mut" style="font-size:13px;margin:10px 0 6px">Твой Steam ID уже в списке. Впиши Steam ID остальных (17 цифр, начинаются с 7656119). Каждый должен зайти на сайт через Steam и нажать «Вступить» в кабинете. Когда нажмут все, привилегия выдастся всем сразу.</p><div style="display:grid;gap:6px">${s.members.map((v,i)=>`<input data-smem="${i}" inputmode="numeric" maxlength="17" placeholder="Steam ID участника ${i+2}" value="${esc(v)}" style="width:100%;box-sizing:border-box">`).join('')}</div>`:''}
  <h4 style="margin:12px 0 6px">Срок</h4><div style="display:flex;flex-wrap:wrap;gap:8px">${SUBM.map(m=>`<button class="btn sm ${s.m===m[0]?'pri':''}" data-subm="${m[0]}">${m[2]}${m[1]<1?` −${Math.round((1-m[1])*100)}%`:''}</button>`).join('')}</div>
- <h4 style="margin:12px 0 6px">Для друзей (по желанию)</h4><textarea id="subfr" rows="3" placeholder="Ник или Steam ID, по одному в строке. Каждый друг получает такую же привилегию на тот же срок." style="width:100%;box-sizing:border-box">${esc(s.friends)}</textarea>
  <h4 style="margin:12px 0 6px">Куда прислать подтверждение</h4><div style="display:flex;flex-wrap:wrap;gap:8px">${SUBCH.map(c=>`<button class="btn sm ${s.ch===c[0]?'pri':''}" data-subch="${c[0]}">${c[1]}</button>`).join('')}</div>
  <input id="subct" placeholder="${s.ch==='email'?'Адрес почты':s.ch==='telegram'?'@username в Telegram':'Ник в Discord'}" value="${esc(s.contact)}" style="width:100%;box-sizing:border-box;margin-top:8px">
+ <div class="mut" style="font-size:12px;margin-top:4px">Сообщения в Discord приходят, если ты привязал Discord командой /discord в игре. Telegram и почту подключим позже.</div>
  <div id="subsum" style="display:grid;gap:6px;margin-top:12px">${subSummary()}</div>
- <div class="row"><button class="btn org" data-subgo>Оформить (тест)</button><button class="btn" data-close>Закрыть</button></div>`)}
-function subSubmit(){const s=SUBS;if(!s.contact.trim()){toast('Укажи, куда прислать подтверждение');return}const tot=subTotal();
- const rec={pkg:s.n,months:s.m,channel:s.ch,contact:s.contact.trim(),friends:subFriends(),total:tot.sum,cur:tot.cur,at:Date.now(),acc:ACC?ACC.steamId||ACC.email||ACC.nick:null};
- try{const L=JSON.parse(localStorage.getItem('lima_sub_test')||'[]');L.push(rec);localStorage.setItem('lima_sub_test',JSON.stringify(L.slice(-20)))}catch(e){}
- api('/api/subscription/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)}).catch(()=>{});
- closeM();toast('Тестовая подписка оформлена. Подтверждение придёт: '+(SUBCH.find(c=>c[0]===s.ch)||[])[1])}
-document.addEventListener('input',e=>{const t=e.target;if(t.id==='subfr'){SUBS.friends=t.value;const b=$('#subsum');if(b)b.innerHTML=subSummary()}else if(t.id==='subct')SUBS.contact=t.value});
+ <div class="row"><button class="btn org" data-subgo>Оформить${LIVE_SUBS_TEST?' (тест)':''}</button><button class="btn" data-close>Закрыть</button></div>`)}
+var LIVE_SUBS_TEST=true,SUBL=null;
+async function subSubmit(){const s=SUBS,mem=subFriends();
+ if(mem.some(x=>!STEAM64.test(x))){toast('Steam ID должен состоять из 17 цифр и начинаться с 7656119');return}
+ if(mem.includes(ACC.steamId)){toast('Твой Steam ID добавлять не нужно');return}
+ try{const r=await api('/api/subs/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pkg:s.n,months:s.m,members:mem,channel:s.ch,contact:s.contact.trim()})});
+  closeM();SUBL=null;location.hash='#cabinet';
+  toast(r.sub&&r.sub.status==='active'?'Подписка активна, привилегия выдана':'Подписка создана. Ждём, пока вступят все участники')}
+ catch(e){const m=String(e.message);toast(m==='http_429'?'Слишком много открытых подписок':m==='http_400'?'Проверь Steam ID и срок':'Не удалось оформить подписку')}}
+async function loadSubs(){if(!ACC||!ACC.steamId||!apiOn())return;
+ try{const r=await api('/api/subs/mine');LIVE_SUBS_TEST=!!r.test;const was=JSON.stringify(SUBL);SUBL=r.subs||[];if(was!==JSON.stringify(SUBL)){const b=$('#subbox');if(b)b.innerHTML=subsHtml()}}catch(e){}}
+const SUBST={waiting:'Ждём участников',active:'Активна',expired:'Закончилась',cancelled:'Отменена'};
+function subsHtml(){if(SUBL===null)return '<p class="mut">Загрузка…</p>';
+ if(!SUBL.length)return '<p class="mut">Подписок пока нет. Оформить можно в разделе «Донат».</p>';
+ return SUBL.map(s=>{const me=s.members.find(m=>m.steamId===ACC.steamId),need=me&&!me.joined&&s.status==='waiting';
+  const left=s.renewsAt?Math.max(0,s.renewsAt*1000-Date.now()):0;
+  return `<div class="card" style="padding:12px;display:grid;gap:8px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(s.pkg)}${s.size>1?` · клан ${s.size}`:''}${s.test?' (тест)':''}</b><span class="badge ${s.status==='active'?'lime':''}">${SUBST[s.status]||s.status}</span></div>
+  <div class="mut" style="font-size:13px">${s.months} мес. · ${s.perPerson} на человека, всего ${s.total}${s.status==='active'?` · до ${new Date(s.renewsAt*1000).toLocaleDateString(LANG==='en'?'en-GB':'ru-RU')}${s.autoRenew?'':' · без продления'}`:''}</div>
+  ${s.size>1?`<div style="display:flex;flex-wrap:wrap;gap:6px">${s.members.map(m=>`<span class="badge ${m.joined?'lime':''}" title="${esc(m.steamId)}">${esc(m.name||m.steamId.slice(-6))} ${m.joined?'✓':'…'}</span>`).join('')}</div>`:''}
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${need?`<button class="btn sm org" data-sjoin="${s.id}">Вступить</button>`:''}${s.mine&&(s.status==='waiting'||(s.status==='active'&&s.autoRenew))?`<button class="btn sm" data-scancel="${s.id}">${s.status==='waiting'?'Отменить':'Не продлевать'}</button>`:''}</div></div>`}).join('')}
+async function subAct(kind,id){try{await api('/api/subs/'+kind,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:+id})});toast(kind==='join'?'Ты в подписке':'Готово');await loadSubs()}catch(e){toast('Не получилось, попробуй ещё раз')}}
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.smem!==undefined){SUBS.members[+t.dataset.smem]=t.value.replace(/\D/g,'');const b=$('#subsum');if(b)b.innerHTML=subSummary()}else if(t.id==='subct')SUBS.contact=t.value});
 const priceOf=d=>{const p=LIVE.pricing;return p&&p.prices&&p.prices[d.n]!=null?`${p.prices[d.n]} ${CUR_SYM[p.currency]||p.currency}`:`${d.price} €`};
 let saveT;const pushSettings=()=>{if(!apiOn()||!isAdmin())return;clearTimeout(saveT);saveT=setTimeout(()=>{api('/api/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(C)}).then(()=>toast('Настройки сохранены')).catch(()=>toast('Не удалось сохранить настройки на сервер'))},800)};
 /* ===== топ, таймеры, частицы ===== */
@@ -1050,7 +1117,11 @@ document.addEventListener('click',e=>{const z=e.target.closest('[data-zoom]');if
  const t=e.target.closest('button,a,[data-cp]');if(!t){if(e.target.id==='ov')closeM();return}const d=t.dataset;
  if(d.cp)copy(d.cp);
  else if(d.kv)kitModal(d.kv);
- else if(d.sub){SUBS={n:d.sub,m:1,ch:'telegram',contact:'',friends:''};subModal()}
+ else if(d.kc!==undefined){KC.cat=d.kc;renderSite()}
+ else if(d.sub){SUBS={n:d.sub,m:1,ch:'discord',contact:'',mode:'solo',members:['','','','']};subModal()}
+ else if(d.smode){SUBS.mode=d.smode;subModal()}
+ else if(d.sjoin)subAct('join',d.sjoin);
+ else if(d.scancel)subAct('cancel',d.scancel);
  else if(d.subm){SUBS.m=+d.subm;subModal()}
  else if(d.subch){SUBS.ch=d.subch;subModal()}
  else if(t.hasAttribute('data-subgo'))subSubmit();

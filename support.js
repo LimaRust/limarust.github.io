@@ -8,11 +8,11 @@
   const T = EN ? {
     open: "Support", title: "Support", hello: "Hello! Ask any question about the server. A helper (AI) answers first; if it cannot help, a real administrator joins this chat.",
     ph: "Write your question…", send: "Send", close: "Close chat", wait: "An administrator has been called. Please keep this page open.", slow: "Too fast, wait a bit.", busy: "Support is busy, try later.", err: "No connection, try again.",
-    ai: "Helper (AI)", staff: "Administrator", full: "Full screen / back", min: "Minimize", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.",
+    callBtn: "Call an administrator", ai: "Helper (AI)", staff: "Administrator", full: "Full screen / back", min: "Minimize", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.",
   } : {
     open: "Поддержка", title: "Поддержка", hello: "Здравствуйте! Задайте любой вопрос про сервер. Сначала отвечает помощник (ИИ), если он не справится, в чат придёт живой администратор.",
     ph: "Напишите вопрос…", send: "Отправить", close: "Закрыть чат", wait: "Администратор вызван. Не закрывайте эту страницу.", slow: "Слишком быстро, подождите немного.", busy: "Поддержка сейчас занята, попробуйте позже.", err: "Нет связи, попробуйте ещё раз.",
-    ai: "Помощник (ИИ)", staff: "Администратор", full: "На весь экран / обратно", min: "Свернуть", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.",
+    callBtn: "Позвать администратора", ai: "Помощник (ИИ)", staff: "Администратор", full: "На весь экран / обратно", min: "Свернуть", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.",
   };
 
   let token = "", after = 0, status = "none", timer = null, opened = false;
@@ -35,6 +35,7 @@
 #lsm .n{align-self:center;color:#98a088;font-size:13px;text-align:center}
 #lsm small{display:block;color:#98a088;font-size:11px;margin-bottom:2px}
 #lsm .u small{color:#4a5232}
+#lsp .callrow{padding:6px 10px 0}#lsp .callrow button{width:100%;background:#262b1b;color:#d4e85a;border:1px solid #3a4128;border-radius:10px;padding:8px;font:inherit;font-weight:700;cursor:pointer}#lsp .callrow button:hover{background:#2f3622}
 #lsf{display:flex;gap:8px;padding:10px;border-top:1px solid #2c3123}
 #lsf textarea{flex:1;resize:none;height:44px;background:#12140f;color:#e8ebdd;border:1px solid #3a4128;border-radius:10px;padding:8px 10px;font:inherit}
 #lsf button{background:#d4e85a;color:#1a1d10;border:0;border-radius:10px;padding:0 14px;font-weight:700;cursor:pointer}
@@ -46,6 +47,7 @@
   const btn = document.createElement("button"); btn.id = "lsb"; btn.type = "button"; btn.textContent = "💬 " + T.open;
   const panel = document.createElement("div"); panel.id = "lsp"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", T.title);
   panel.innerHTML = `<header><span>💬 ${T.title}</span><span class="hb"><button type="button" id="lse" aria-label="expand" title="${T.full}">⛶</button><button type="button" id="lsx" aria-label="close" title="${T.min}">×</button></span></header><div id="lsm"></div>
+    <div class="callrow"><button type="button" id="lsa">👤 ${T.callBtn}</button></div>
     <div id="lsf"><textarea id="lst" maxlength="1000" placeholder="${T.ph}"></textarea><button type="button" id="lss">${T.send}</button></div>
     <div class="foot"><span>${T.priv}</span><a id="lsc">${T.close}</a></div>`;
   document.body.appendChild(btn); document.body.appendChild(panel);
@@ -75,12 +77,12 @@
     } catch (e) { /* offline: try again later */ }
   }
 
-  async function send() {
-    const text = input.value.trim();
-    if (!text || sendBtn.disabled) return;
+  async function send(call) {
+    const text = call === true ? "" : input.value.trim();
+    if ((!text && call !== true) || sendBtn.disabled) return;
     sendBtn.disabled = true;
     try {
-      const r = await api("/api/support/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, text, after, lang: EN ? "en" : "ru" }) });
+      const r = await api("/api/support/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, text, call: call === true, after, lang: EN ? "en" : "ru" }) });
       if (r.code === 429) note(r.body.error === "busy" ? T.busy : T.slow);
       else if (r.body.ok) { input.value = ""; if (r.body.token !== token) { token = r.body.token; after = 0; } take(r.body.messages); status = r.body.status; if (status === "staff") note(T.wait); }
       else note(T.err);
@@ -101,7 +103,8 @@
   panel.querySelector("#lsx").onclick = hide;
   panel.querySelector("#lse").onclick = () => setBig(!panel.classList.contains("big"));
   panel.querySelector("#lsc").onclick = async () => { if (token) { try { await api("/api/support/close", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) }); } catch (e) { /* ignore */ } } token = ""; after = 0; status = "none"; save(); box.innerHTML = ""; note(T.hello); };
-  sendBtn.onclick = send;
+  sendBtn.onclick = () => send();
+  panel.querySelector("#lsa").onclick = () => send(true);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && opened) hide(); });
 })();

@@ -8,11 +8,11 @@
   const T = EN ? {
     open: "Support", title: "Support", hello: "Hello! Ask any question about the server. A helper (AI) answers first; if it cannot help, a real administrator joins this chat.",
     ph: "Write your question…", send: "Send", close: "Close chat", wait: "An administrator has been called. Please keep this page open.", slow: "Too fast, wait a bit.", busy: "Support is busy, try later.", err: "No connection, try again.",
-    ai: "Helper (AI)", staff: "Administrator", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.",
+    ai: "Helper (AI)", staff: "Administrator", full: "Full screen / back", min: "Minimize", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.",
   } : {
     open: "Поддержка", title: "Поддержка", hello: "Здравствуйте! Задайте любой вопрос про сервер. Сначала отвечает помощник (ИИ), если он не справится, в чат придёт живой администратор.",
     ph: "Напишите вопрос…", send: "Отправить", close: "Закрыть чат", wait: "Администратор вызван. Не закрывайте эту страницу.", slow: "Слишком быстро, подождите немного.", busy: "Поддержка сейчас занята, попробуйте позже.", err: "Нет связи, попробуйте ещё раз.",
-    ai: "Помощник (ИИ)", staff: "Администратор", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.",
+    ai: "Помощник (ИИ)", staff: "Администратор", full: "На весь экран / обратно", min: "Свернуть", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.",
   };
 
   let token = "", after = 0, status = "none", timer = null, opened = false;
@@ -23,7 +23,10 @@
   css.textContent = `#lsb{position:fixed;left:16px;bottom:16px;z-index:9000;background:#d4e85a;color:#1a1d10;border:0;border-radius:999px;padding:11px 18px;font:700 15px system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4)}
 #lsp{position:fixed;left:16px;bottom:16px;z-index:9001;width:min(380px,calc(100vw - 32px));height:min(520px,calc(100vh - 32px));display:none;flex-direction:column;background:#1b1e15;color:#e8ebdd;border:1px solid #3a4128;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.55);font:15px/1.45 system-ui,Segoe UI,sans-serif;overflow:hidden}
 #lsp header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#262b1b;font-weight:700;color:#d4e85a}
-#lsp header button{background:none;border:0;color:#98a088;font-size:20px;cursor:pointer}
+#lsp header button{background:none;border:0;color:#98a088;font-size:20px;cursor:pointer;padding:0 6px}
+#lsp header .hb{display:flex;gap:4px;align-items:center}
+#lsp.big{left:0;bottom:0;width:100vw;height:100vh;height:100dvh;max-width:none;border-radius:0;border:0}
+#lsp.big #lsm .m{max-width:min(720px,86%)}
 #lsm{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
 #lsm .m{max-width:86%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word}
 #lsm .u{align-self:flex-end;background:#d4e85a;color:#1a1d10}
@@ -42,7 +45,7 @@
 
   const btn = document.createElement("button"); btn.id = "lsb"; btn.type = "button"; btn.textContent = "💬 " + T.open;
   const panel = document.createElement("div"); panel.id = "lsp"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", T.title);
-  panel.innerHTML = `<header><span>💬 ${T.title}</span><button type="button" id="lsx" aria-label="close">×</button></header><div id="lsm"></div>
+  panel.innerHTML = `<header><span>💬 ${T.title}</span><span class="hb"><button type="button" id="lse" aria-label="expand" title="${T.full}">⛶</button><button type="button" id="lsx" aria-label="close" title="${T.min}">×</button></span></header><div id="lsm"></div>
     <div id="lsf"><textarea id="lst" maxlength="1000" placeholder="${T.ph}"></textarea><button type="button" id="lss">${T.send}</button></div>
     <div class="foot"><span>${T.priv}</span><a id="lsc">${T.close}</a></div>`;
   document.body.appendChild(btn); document.body.appendChild(panel);
@@ -91,9 +94,12 @@
     clearInterval(timer); timer = setInterval(poll, 7000); input.focus();
   };
   const hide = () => { opened = false; panel.style.display = "none"; btn.style.display = ""; clearInterval(timer); };
+  const setBig = (on) => { panel.classList.toggle("big", on); try { localStorage.setItem(KEY + "_big", on ? "1" : ""); } catch (e) { /* ignore */ } };
+  try { if (localStorage.getItem(KEY + "_big")) panel.classList.add("big"); } catch (e) { /* ignore */ }
 
   btn.onclick = show;
   panel.querySelector("#lsx").onclick = hide;
+  panel.querySelector("#lse").onclick = () => setBig(!panel.classList.contains("big"));
   panel.querySelector("#lsc").onclick = async () => { if (token) { try { await api("/api/support/close", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) }); } catch (e) { /* ignore */ } } token = ""; after = 0; status = "none"; save(); box.innerHTML = ""; note(T.hello); };
   sendBtn.onclick = send;
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });

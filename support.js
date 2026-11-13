@@ -56,8 +56,9 @@
   const note = (text) => { const d = document.createElement("div"); d.className = "m n"; d.textContent = text; box.appendChild(d); box.scrollTop = box.scrollHeight; };
   const add = (m) => {
     const d = document.createElement("div");
-    d.className = "m " + (m.who === "user" ? "u" : m.who === "staff" ? "s" : "a");
-    const s = document.createElement("small"); s.textContent = m.who === "user" ? T.you : m.who === "staff" ? T.staff : T.ai;
+    const isStaff = String(m.who).indexOf("staff") === 0, staffName = isStaff ? String(m.who).slice(6) : "";
+    d.className = "m " + (m.who === "user" ? "u" : isStaff ? "s" : "a");
+    const s = document.createElement("small"); s.textContent = m.who === "user" ? T.you : isStaff ? (T.staff + (staffName ? " " + staffName : "")) : T.ai;
     const t = document.createElement("span"); t.textContent = m.text;            // text only: nothing from the server is ever run as HTML
     d.appendChild(s); d.appendChild(t); box.appendChild(d); box.scrollTop = box.scrollHeight;
     after = Math.max(after, m.id || 0);

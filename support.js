@@ -8,10 +8,12 @@
   const T = EN ? {
     open: "Support", title: "Support", hello: "Hello! Ask any question about the server. A helper (AI) answers first; if it cannot help, a real administrator joins this chat.",
     ph: "Write your question…", send: "Send", close: "Close chat", wait: "An administrator has been called. Please keep this page open.", slow: "Too fast, wait a bit.", busy: "Support is busy, try later.", err: "No connection, try again.",
+    helped: "Helped", nothelp: "Did not help", thanksDown: "Thanks! Press “Call an administrator” if you need a person.",
     callBtn: "Call an administrator", ai: "Helper (AI)", staff: "Administrator", full: "Full screen / back", min: "Minimize", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.",
   } : {
     open: "Поддержка", title: "Поддержка", hello: "Здравствуйте! Задайте любой вопрос про сервер. Сначала отвечает помощник (ИИ), если он не справится, в чат придёт живой администратор.",
     ph: "Напишите вопрос…", send: "Отправить", close: "Закрыть чат", wait: "Администратор вызван. Не закрывайте эту страницу.", slow: "Слишком быстро, подождите немного.", busy: "Поддержка сейчас занята, попробуйте позже.", err: "Нет связи, попробуйте ещё раз.",
+    helped: "Помогло", nothelp: "Не помогло", thanksDown: "Спасибо! Если нужен человек, нажмите «Позвать администратора».",
     callBtn: "Позвать администратора", ai: "Помощник (ИИ)", staff: "Администратор", full: "На весь экран / обратно", min: "Свернуть", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.",
   };
 
@@ -35,6 +37,7 @@
 #lsm .n{align-self:center;color:#98a088;font-size:13px;text-align:center}
 #lsm small{display:block;color:#98a088;font-size:11px;margin-bottom:2px}
 #lsm .u small{color:#4a5232}
+#lsm .rt{margin-top:4px;display:flex;align-items:center;gap:4px;font-size:12px;color:#98a088}#lsm .rt button{background:none;border:1px solid #3a4128;border-radius:8px;padding:1px 8px;cursor:pointer;font-size:14px;opacity:.7}#lsm .rt button:hover,#lsm .rt button.on{opacity:1;background:#262b1b}#lsm .rt i{font-style:normal}
 #lsp .callrow{padding:6px 10px 0}#lsp .callrow button{width:100%;background:#262b1b;color:#d4e85a;border:1px solid #3a4128;border-radius:10px;padding:8px;font:inherit;font-weight:700;cursor:pointer}#lsp .callrow button:hover{background:#2f3622}
 #lsf{display:flex;gap:8px;padding:10px;border-top:1px solid #2c3123}
 #lsf textarea{flex:1;resize:none;height:44px;background:#12140f;color:#e8ebdd;border:1px solid #3a4128;border-radius:10px;padding:8px 10px;font:inherit}
@@ -60,7 +63,21 @@
     d.className = "m " + (m.who === "user" ? "u" : isStaff ? "s" : "a");
     const s = document.createElement("small"); s.textContent = m.who === "user" ? T.you : isStaff ? (T.staff + (staffName ? " " + staffName : "")) : T.ai;
     const t = document.createElement("span"); t.textContent = m.text;            // text only: nothing from the server is ever run as HTML
-    d.appendChild(s); d.appendChild(t); box.appendChild(d); box.scrollTop = box.scrollHeight;
+    d.appendChild(s); d.appendChild(t);
+    if (m.rateable) {                                                            // 👍 / 👎 under an answer of the AI
+      const rt = document.createElement("div"); rt.className = "rt";
+      [["up", "👍"], ["down", "👎"]].forEach(([val, icon]) => {
+        const b = document.createElement("button"); b.type = "button"; b.textContent = icon; b.title = val === "up" ? T.helped : T.nothelp;
+        b.onclick = async () => {
+          rt.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+          try { await api("/api/support/rate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, id: m.id, rating: val }) }); } catch (e) { /* the rating is a convenience */ }
+          if (val === "down" && !rt.querySelector("i")) { const i = document.createElement("i"); i.textContent = " " + T.thanksDown; rt.appendChild(i); }
+        };
+        rt.appendChild(b);
+      });
+      d.appendChild(rt);
+    }
+    box.appendChild(d); box.scrollTop = box.scrollHeight;
     after = Math.max(after, m.id || 0);
   };
   const take = (list) => { (list || []).forEach((m) => { if (m.id > after) add(m); }); save(); };

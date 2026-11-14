@@ -9,12 +9,12 @@
     open: "Support", title: "Support", hello: "Hello! Ask any question about the server. A helper (AI) answers first; if it cannot help, a real administrator joins this chat.",
     ph: "Write your question…", send: "Send", close: "Close chat", wait: "An administrator has been called. Please keep this page open.", slow: "Too fast, wait a bit.", busy: "Support is busy, try later.", err: "No connection, try again.",
     helped: "Helped", nothelp: "Did not help", thanksDown: "Thanks! Press “Call an administrator” if you need a person.",
-    callBtn: "Call an administrator", ai: "Helper (AI)", staff: "Administrator", full: "Full screen / back", min: "Minimize", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.",
+    callBtn: "Call an administrator", ai: "Helper (AI)", staff: "Administrator", full: "Full screen / back", min: "Minimize", you: "You", ended: "The chat is closed. Write a message to start a new one.", priv: "Messages are kept 90 days after the chat is closed. Do not send passwords.", attach: "Attach a photo or video", fileBig: "The file is too big (up to 8 MB).", fileType: "Only photos (PNG, JPG, WEBP, GIF) and videos (MP4, WEBM, MOV).", fileSent: "File sent to an administrator.", sending: "Sending the file…",
   } : {
     open: "Поддержка", title: "Поддержка", hello: "Здравствуйте! Задайте любой вопрос про сервер. Сначала отвечает помощник (ИИ), если он не справится, в чат придёт живой администратор.",
     ph: "Напишите вопрос…", send: "Отправить", close: "Закрыть чат", wait: "Администратор вызван. Не закрывайте эту страницу.", slow: "Слишком быстро, подождите немного.", busy: "Поддержка сейчас занята, попробуйте позже.", err: "Нет связи, попробуйте ещё раз.",
     helped: "Помогло", nothelp: "Не помогло", thanksDown: "Спасибо! Если нужен человек, нажмите «Позвать администратора».",
-    callBtn: "Позвать администратора", ai: "Помощник (ИИ)", staff: "Администратор", full: "На весь экран / обратно", min: "Свернуть", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.",
+    callBtn: "Позвать администратора", ai: "Помощник (ИИ)", staff: "Администратор", full: "На весь экран / обратно", min: "Свернуть", you: "Вы", ended: "Чат закрыт. Напишите сообщение, чтобы начать новый.", priv: "Сообщения хранятся 90 дней после закрытия чата. Не отправляйте пароли.", attach: "Прикрепить фото или видео", fileBig: "Файл слишком большой (до 8 МБ).", fileType: "Только фото (PNG, JPG, WEBP, GIF) и видео (MP4, WEBM, MOV).", fileSent: "Файл отправлен администратору.", sending: "Отправляю файл…",
   };
 
   let token = "", after = 0, status = "none", timer = null, opened = false;
@@ -42,7 +42,7 @@
 #lsf{display:flex;gap:8px;padding:10px;border-top:1px solid #2c3123}
 #lsf textarea{flex:1;resize:none;height:44px;background:#12140f;color:#e8ebdd;border:1px solid #3a4128;border-radius:10px;padding:8px 10px;font:inherit}
 #lsf button{background:#d4e85a;color:#1a1d10;border:0;border-radius:10px;padding:0 14px;font-weight:700;cursor:pointer}
-#lsf button:disabled{opacity:.5;cursor:default}
+#lsf button:disabled{opacity:.5;cursor:default}#lsf #lsk{background:#262b1b;color:#d4e85a;border:1px solid #3a4128;padding:0 10px;font-size:18px}#lsm a{color:#56ccf2;word-break:break-all}
 #lsp .foot{padding:0 12px 8px;color:#98a088;font-size:11px;display:flex;justify-content:space-between;gap:8px}
 #lsp .foot a{color:#98a088;cursor:pointer;text-decoration:underline}`;
   document.head.appendChild(css);
@@ -51,7 +51,7 @@
   const panel = document.createElement("div"); panel.id = "lsp"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", T.title);
   panel.innerHTML = `<header><span>💬 ${T.title}</span><span class="hb"><button type="button" id="lse" aria-label="expand" title="${T.full}">⛶</button><button type="button" id="lsx" aria-label="close" title="${T.min}">×</button></span></header><div id="lsm"></div>
     <div class="callrow"><button type="button" id="lsa">👤 ${T.callBtn}</button></div>
-    <div id="lsf"><textarea id="lst" maxlength="1000" placeholder="${T.ph}"></textarea><button type="button" id="lss">${T.send}</button></div>
+    <div id="lsf"><button type="button" id="lsk" title="${T.attach}" aria-label="${T.attach}">📎</button><input type="file" id="lsfi" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" hidden><textarea id="lst" maxlength="1000" placeholder="${T.ph}"></textarea><button type="button" id="lss">${T.send}</button></div>
     <div class="foot"><span>${T.priv}</span><a id="lsc">${T.close}</a></div>`;
   document.body.appendChild(btn); document.body.appendChild(panel);
   const box = panel.querySelector("#lsm"), input = panel.querySelector("#lst"), sendBtn = panel.querySelector("#lss");
@@ -62,7 +62,8 @@
     const isStaff = String(m.who).indexOf("staff") === 0, staffName = isStaff ? String(m.who).slice(6) : "";
     d.className = "m " + (m.who === "user" ? "u" : isStaff ? "s" : "a");
     const s = document.createElement("small"); s.textContent = m.who === "user" ? T.you : isStaff ? (T.staff + (staffName ? " " + staffName : "")) : T.ai;
-    const t = document.createElement("span"); t.textContent = m.text;            // text only: nothing from the server is ever run as HTML
+    const t = document.createElement("span");                                   // text only: nothing from the server is ever run as HTML
+    String(m.text).split(/(https:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net)\/[^\s]+)/).forEach((part, i) => { if (i % 2) { const a = document.createElement("a"); a.href = part; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = part.length > 48 ? part.slice(0, 45) + "…" : part; t.appendChild(a); } else t.appendChild(document.createTextNode(part)); });
     d.appendChild(s); d.appendChild(t);
     if (m.rateable) {                                                            // 👍 / 👎 under an answer of the AI
       const rt = document.createElement("div"); rt.className = "rt";
@@ -108,6 +109,41 @@
     sendBtn.disabled = false; input.focus();
   }
 
+  // Photos and videos: a photo is shrunk in the browser (longest side 1600 px) to keep the upload small; a video goes as it is (up to 8 MB).
+  const MAXF = 8 * 1024 * 1024, fileIn = panel.querySelector("#lsfi"), attachBtn = panel.querySelector("#lsk");
+  const shrink = (file) => new Promise((resolve) => {
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size < 400 * 1024) return resolve(file);
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob((b) => resolve(b && b.size < file.size ? new File([b], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file), "image/jpeg", 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+  async function sendFile(file) {
+    if (!/^(image\/(png|jpeg|webp|gif)|video\/(mp4|webm|quicktime))$/.test(file.type)) return note(T.fileType);
+    file = await shrink(file);
+    if (file.size > MAXF) return note(T.fileBig);
+    attachBtn.disabled = true; sendBtn.disabled = true; note(T.sending);
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name); fd.append("token", token); fd.append("after", String(after)); fd.append("lang", EN ? "en" : "ru"); fd.append("text", input.value.trim());
+      const r = await api("/api/support/upload", { method: "POST", body: fd });
+      if (r.code === 429) note(r.body.error === "busy" ? T.busy : T.slow);
+      else if (r.code === 413) note(T.fileBig);
+      else if (r.code === 415) note(T.fileType);
+      else if (r.body.ok) { input.value = ""; if (r.body.token !== token) { token = r.body.token; after = 0; } take(r.body.messages); status = r.body.status; note(T.fileSent); }
+      else note(T.err);
+    } catch (e) { note(T.err); }
+    attachBtn.disabled = false; sendBtn.disabled = false; fileIn.value = "";
+  }
+  attachBtn.onclick = () => fileIn.click();
+  fileIn.onchange = () => { if (fileIn.files && fileIn.files[0]) sendFile(fileIn.files[0]); };
+  panel.addEventListener("paste", (e) => { const f = e.clipboardData && [...e.clipboardData.files].find((x) => /^image\//.test(x.type)); if (f) { e.preventDefault(); sendFile(f); } });
   const show = () => {
     opened = true; panel.style.display = "flex"; btn.style.display = "none";
     if (!box.childElementCount) { note(T.hello); if (token) { after = 0; poll(); } }

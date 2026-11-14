@@ -583,6 +583,7 @@ input[type=checkbox]{accent-color:var(--lime);width:17px;height:17px}
 <div class="toast" id="toast" role="status"></div>
 
 <script src="consent.js?v=1"></script>
+<script src="promo-link.js?v=1" defer></script>
 <script src="support.js?v=1" defer></script>
 <script src="lang-en.js?v=3"></script>
 <script>
@@ -691,8 +692,11 @@ const LIVE={status:null,pricing:null,pay:null};
 const PAYDEMO=/[?&]paydemo/.test(location.search);
 // on: the game server reports; off: it has not reported for 3 minutes or the Worker says so; unk: no answer from the Worker
 function srvState(){const s=LIVE.status;if(!s||!s.max)return{k:'unk'};if(s.offline||(s.updated&&Date.now()/1000-s.updated>180))return{k:'off'};return{k:'on',online:s.online,max:s.max}}
-function onlHtml(){const s=srvState();if(s.k==='on')return '<b id="onl">'+s.online+'</b><span><i class="dot"></i>онлайн из '+s.max+'</span>';if(s.k==='off')return '<b id="onl" style="font-size:20px">Сервер выключен</b><span><i class="dot off"></i>сейчас офлайн</span>';return '<b id="onl">—</b><span><i class="dot off"></i>статус недоступен</span>'}
+function onlHtml(){const s=srvState();if(s.k==='on')return '<b id="onl">'+s.online+'</b><span><i class="dot"></i>онлайн из '+s.max+'</span><small id="onlAge" style="display:block;font-size:11px;opacity:.65;margin-top:2px">'+ageText()+'</small>';if(s.k==='off')return '<b id="onl" style="font-size:20px">Сервер выключен</b><span><i class="dot off"></i>сейчас офлайн</span>';return '<b id="onl">—</b><span><i class="dot off"></i>статус недоступен</span>'}
 function paintOnline(){const c=document.getElementById('onlCard');if(c)c.innerHTML=onlHtml()}
+/* "data updated N seconds ago": the age of the last report of the game server, counted by the browser and refreshed every 5 seconds */
+function ageText(){const s=LIVE.status;if(!s||!s.updated)return '';const a=Math.max(0,Math.round(Date.now()/1000-s.updated));return 'данные обновлены '+(a<90?a+' с':Math.round(a/60)+' мин')+' назад'}
+setInterval(()=>{const e=document.getElementById('onlAge');if(e)e.textContent=ageText()},5000);
 /* The account is never read from localStorage: it is rebuilt from the signed token on every visit. */
 let ACC=null;
 const saveA=()=>{if(!ACC)tokenSet('')};
